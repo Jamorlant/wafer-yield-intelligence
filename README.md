@@ -136,7 +136,8 @@ python -m src.cli serve --port 8000
 - **可解释**：LightGBM 用原生 TreeSHAP（`pred_contrib`），逻辑回归用标准化系数，两者都是精确加性归因。
 - **测试**：18 个 pytest 用例覆盖特征工程、质量规则、指标边界（Recall@FPR、业务价值、bootstrap）与 API 合约。
 - **CI**：GitHub Actions 在 Python 3.13 上执行 `ruff check` + `pytest`，不依赖原始数据。
-- **容器**：`docker build -t wafer-yield . && docker run -p 8000:8000 wafer-yield`（需先在本机训练并挂载 artifacts）。
+- **容器**：提供 API 镜像（`docker build -t wafer-yield .`）。本机未安装 Docker，镜像未做构建验证；训练产物通过 volume 挂载。
+- **CI 状态**：GitHub Actions 已真实跑通（lint + 18 个测试）。
 
 ## 局限与下一步
 
