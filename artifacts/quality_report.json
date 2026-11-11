@@ -1,0 +1,138 @@
+{
+  "generated_at": "2026-11-11T07:11:38+00:00",
+  "run_id": "20261111T070937Z-b3607c",
+  "overall_status": "pass",
+  "summary": {
+    "wafers": 1567,
+    "sensors": 590,
+    "fail_rate": 0.0664,
+    "usable_sensors": 436,
+    "max_sensor_missing_rate": 0.9119,
+    "split": {
+      "train": 1097,
+      "valid": 235,
+      "test": 235
+    }
+  },
+  "checks": [
+    {
+      "check_name": "secom_wafer_row_count",
+      "status": "pass",
+      "observed": "1567",
+      "expected": "1567",
+      "details": "UCI SECOM ships 1,567 wafers"
+    },
+    {
+      "check_name": "secom_sensor_column_count",
+      "status": "pass",
+      "observed": "590",
+      "expected": "590",
+      "details": ""
+    },
+    {
+      "check_name": "duplicate_wafer_id",
+      "status": "pass",
+      "observed": "0",
+      "expected": "0",
+      "details": ""
+    },
+    {
+      "check_name": "label_domain",
+      "status": "pass",
+      "observed": "0",
+      "expected": "0",
+      "details": "allowed: -1 pass, 1 fail"
+    },
+    {
+      "check_name": "timestamp_parse",
+      "status": "pass",
+      "observed": "0",
+      "expected": "0",
+      "details": ""
+    },
+    {
+      "check_name": "label_fail_rate",
+      "status": "pass",
+      "observed": "0.0664",
+      "expected": "0.03 - 0.12",
+      "details": "known class imbalance (~6.6% failures); drives PR-AUC/recall@FPR reporting"
+    },
+    {
+      "check_name": "sensor_max_missing_rate",
+      "status": "pass",
+      "observed": "0.9119",
+      "expected": "<= 0.95",
+      "details": ""
+    },
+    {
+      "check_name": "constant_sensor_count",
+      "status": "pass",
+      "observed": "116",
+      "expected": "documented, excluded from model",
+      "details": "constant columns carry no signal but stay in DWD for auditability"
+    },
+    {
+      "check_name": "high_missing_sensor_count",
+      "status": "pass",
+      "observed": "32",
+      "expected": "<= 50",
+      "details": "threshold = 40%"
+    },
+    {
+      "check_name": "usable_sensor_count",
+      "status": "pass",
+      "observed": "436",
+      "expected": "200 - 590",
+      "details": ""
+    },
+    {
+      "check_name": "nonfinite_sensor_values",
+      "status": "pass",
+      "observed": "0",
+      "expected": "0",
+      "details": ""
+    },
+    {
+      "check_name": "layer_row_parity",
+      "status": "pass",
+      "observed": "ods=924,530 dwd=924,530",
+      "expected": "equal",
+      "details": ""
+    },
+    {
+      "check_name": "wm811k_row_count",
+      "status": "pass",
+      "observed": "172950",
+      "expected": "172950",
+      "details": ""
+    },
+    {
+      "check_name": "wm811k_class_count",
+      "status": "pass",
+      "observed": "9",
+      "expected": "9",
+      "details": ""
+    },
+    {
+      "check_name": "wm811k_invalid_rows",
+      "status": "pass",
+      "observed": "0",
+      "expected": "0",
+      "details": "physical-rule violations"
+    },
+    {
+      "check_name": "temporal_split_order",
+      "status": "pass",
+      "observed": "train_max=2008-09-26T03:12:00 < test_min=2008-10-05T20:12:00",
+      "expected": "strictly time ordered",
+      "details": "prevents future leakage in model evaluation"
+    },
+    {
+      "check_name": "split_sizes",
+      "status": "pass",
+      "observed": "{\"test\": 235, \"train\": 1097, \"valid\": 235}",
+      "expected": "each split >= 100",
+      "details": ""
+    }
+  ]
+}

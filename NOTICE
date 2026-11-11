@@ -1,0 +1,26 @@
+Third-party notices
+===================
+
+Datasets
+--------
+* SECOM — UCI Machine Learning Repository, dataset id 179.
+  License: CC BY 4.0. Downloaded at runtime from
+  https://archive.ics.uci.edu/static/public/179/secom.zip
+  Not redistributed in this repository.
+
+* WM-811K — original wafer maps published by Wu, Jang and Chen (IEEE TSM, 2015)
+  and distributed on Kaggle with a CC0 Public Domain label.
+  This repository uses a 26-feature derived table published at
+  https://github.com/ililllilll/WM811K (sha256 pinned in configs/config.yaml).
+  Raw maps are not redistributed. Attribution:
+  Ming-Ju Wu, Jyh-Shing R. Jang, Jui-Long Chen, "Wafer Map Failure Pattern
+  Recognition and Similarity Ranking for Large-Scale Data Sets",
+  IEEE Transactions on Semiconductor Manufacturing, 28(1), 2015.
+
+Frontend
+--------
+* Apache ECharts 5.5.1 — Apache License 2.0.
+  Vendored at dashboard/assets/echarts.min.js so the dashboard works offline.
+  https://github.com/apache/echarts
+
+Python dependencies retain their own licenses; see requirements.txt.

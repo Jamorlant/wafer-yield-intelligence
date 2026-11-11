@@ -1,0 +1,710 @@
+[
+  {
+    "wafer_id": "W01398",
+    "stat_date": "2008-10-07",
+    "is_fail": 0,
+    "probability": 0.2866,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S478",
+        "contribution": 0.201,
+        "value": 15.2161
+      },
+      {
+        "feature": "S060",
+        "contribution": 0.1882,
+        "value": 4.7382
+      },
+      {
+        "feature": "S446",
+        "contribution": -0.1819,
+        "value": 0.3729
+      },
+      {
+        "feature": "S066",
+        "contribution": 0.1711,
+        "value": 49.0476
+      },
+      {
+        "feature": "S206",
+        "contribution": 0.1626,
+        "value": 22.0048
+      },
+      {
+        "feature": "S337",
+        "contribution": 0.1262,
+        "value": 14.4036
+      },
+      {
+        "feature": "S173",
+        "contribution": -0.1075,
+        "value": 0.184
+      },
+      {
+        "feature": "S476",
+        "contribution": 0.0873,
+        "value": 6.0646
+      },
+      {
+        "feature": "S334",
+        "contribution": 0.0727,
+        "value": 8.5226
+      },
+      {
+        "feature": "S444",
+        "contribution": -0.0706,
+        "value": 0.3632
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01362",
+    "stat_date": "2008-10-06",
+    "is_fail": 0,
+    "probability": 0.2434,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S060",
+        "contribution": -0.2074,
+        "value": -5.68
+      },
+      {
+        "feature": "S022",
+        "contribution": 0.1081,
+        "value": -5422.75
+      },
+      {
+        "feature": "S066",
+        "contribution": 0.0996,
+        "value": 37.8425
+      },
+      {
+        "feature": "S461",
+        "contribution": 0.0916,
+        "value": 36.8197
+      },
+      {
+        "feature": "S478",
+        "contribution": 0.0845,
+        "value": 8.4634
+      },
+      {
+        "feature": "S020",
+        "contribution": -0.0763,
+        "value": 12.4363
+      },
+      {
+        "feature": "S417",
+        "contribution": 0.0735,
+        "value": 2.3852
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.0691,
+        "value": 8.8215
+      },
+      {
+        "feature": "S511",
+        "contribution": -0.0671,
+        "value": 26.4901
+      },
+      {
+        "feature": "S334",
+        "contribution": 0.0659,
+        "value": 8.5226
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01360",
+    "stat_date": "2008-10-06",
+    "is_fail": 0,
+    "probability": 0.2167,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S020",
+        "contribution": -0.2183,
+        "value": 12.2747
+      },
+      {
+        "feature": "S022",
+        "contribution": 0.1709,
+        "value": -5241.0
+      },
+      {
+        "feature": "S060",
+        "contribution": -0.1708,
+        "value": -3.9255
+      },
+      {
+        "feature": "S091",
+        "contribution": -0.1537,
+        "value": 9304.9102
+      },
+      {
+        "feature": "S153",
+        "contribution": 0.1285,
+        "value": 0.8492
+      },
+      {
+        "feature": "S066",
+        "contribution": 0.1181,
+        "value": 33.7369
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.0856,
+        "value": 8.8973
+      },
+      {
+        "feature": "S461",
+        "contribution": 0.0751,
+        "value": 26.2699
+      },
+      {
+        "feature": "S089",
+        "contribution": -0.0743,
+        "value": 1747.1456
+      },
+      {
+        "feature": "S426",
+        "contribution": 0.0739,
+        "value": 8.6574
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01365",
+    "stat_date": "2008-10-06",
+    "is_fail": 1,
+    "probability": 0.2073,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S461",
+        "contribution": -0.1812,
+        "value": 20.1231
+      },
+      {
+        "feature": "S060",
+        "contribution": -0.1656,
+        "value": -0.0345
+      },
+      {
+        "feature": "S022",
+        "contribution": 0.1291,
+        "value": -5390.0
+      },
+      {
+        "feature": "S122",
+        "contribution": -0.1273,
+        "value": 15.7
+      },
+      {
+        "feature": "S091",
+        "contribution": -0.1151,
+        "value": 8989.4699
+      },
+      {
+        "feature": "S426",
+        "contribution": 0.105,
+        "value": 8.6026
+      },
+      {
+        "feature": "S011",
+        "contribution": -0.099,
+        "value": -0.007
+      },
+      {
+        "feature": "S153",
+        "contribution": 0.09,
+        "value": 0.8523
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.0837,
+        "value": 9.3181
+      },
+      {
+        "feature": "S134",
+        "contribution": -0.0776,
+        "value": 995.0191
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01364",
+    "stat_date": "2008-10-06",
+    "is_fail": 1,
+    "probability": 0.1993,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S060",
+        "contribution": -0.2735,
+        "value": -0.3136
+      },
+      {
+        "feature": "S022",
+        "contribution": 0.1109,
+        "value": -5392.25
+      },
+      {
+        "feature": "S461",
+        "contribution": 0.0952,
+        "value": 47.3107
+      },
+      {
+        "feature": "S478",
+        "contribution": 0.0803,
+        "value": 9.1663
+      },
+      {
+        "feature": "S211",
+        "contribution": 0.0714,
+        "value": 0.14
+      },
+      {
+        "feature": "S206",
+        "contribution": 0.0704,
+        "value": 13.1
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.0694,
+        "value": 9.0447
+      },
+      {
+        "feature": "S039",
+        "contribution": 0.0636,
+        "value": 86.2183
+      },
+      {
+        "feature": "S125",
+        "contribution": 0.0635,
+        "value": 16.02
+      },
+      {
+        "feature": "S003",
+        "contribution": 0.0628,
+        "value": 2167.0889
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01361",
+    "stat_date": "2008-10-06",
+    "is_fail": 0,
+    "probability": 0.1796,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S060",
+        "contribution": -0.2363,
+        "value": -3.54
+      },
+      {
+        "feature": "S020",
+        "contribution": -0.1944,
+        "value": 12.2937
+      },
+      {
+        "feature": "S461",
+        "contribution": -0.1727,
+        "value": 18.3779
+      },
+      {
+        "feature": "S022",
+        "contribution": 0.155,
+        "value": -5393.5
+      },
+      {
+        "feature": "S288",
+        "contribution": 0.1244,
+        "value": 0.2296
+      },
+      {
+        "feature": "S153",
+        "contribution": 0.1041,
+        "value": 0.7861
+      },
+      {
+        "feature": "S426",
+        "contribution": 0.0832,
+        "value": 8.0311
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.0808,
+        "value": 8.627
+      },
+      {
+        "feature": "S417",
+        "contribution": 0.0729,
+        "value": 2.3852
+      },
+      {
+        "feature": "S443",
+        "contribution": 0.0696,
+        "value": 3.1509
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01507",
+    "stat_date": "2008-10-14",
+    "is_fail": 0,
+    "probability": 0.1711,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S060",
+        "contribution": -0.1785,
+        "value": -2.9818
+      },
+      {
+        "feature": "S022",
+        "contribution": 0.116,
+        "value": -5093.75
+      },
+      {
+        "feature": "S082",
+        "contribution": 0.1123,
+        "value": 0.0041
+      },
+      {
+        "feature": "S001",
+        "contribution": 0.1097,
+        "value": 2883.88
+      },
+      {
+        "feature": "S511",
+        "contribution": -0.0925,
+        "value": 18.8139
+      },
+      {
+        "feature": "S461",
+        "contribution": 0.0714,
+        "value": 38.5132
+      },
+      {
+        "feature": "S284",
+        "contribution": 0.067,
+        "value": 1.2176
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.0632,
+        "value": 8.7552
+      },
+      {
+        "feature": "S131",
+        "contribution": 0.0625,
+        "value": 0.8705
+      },
+      {
+        "feature": "S127",
+        "contribution": 0.0597,
+        "value": 3.25
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01490",
+    "stat_date": "2008-10-13",
+    "is_fail": 0,
+    "probability": 0.169,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S060",
+        "contribution": 0.3078,
+        "value": 26.9709
+      },
+      {
+        "feature": "S034",
+        "contribution": -0.2329,
+        "value": 8.451
+      },
+      {
+        "feature": "S478",
+        "contribution": 0.1841,
+        "value": 15.2161
+      },
+      {
+        "feature": "S206",
+        "contribution": 0.1607,
+        "value": 22.0048
+      },
+      {
+        "feature": "S066",
+        "contribution": 0.1588,
+        "value": 49.0476
+      },
+      {
+        "feature": "S122",
+        "contribution": -0.1093,
+        "value": 15.589
+      },
+      {
+        "feature": "S337",
+        "contribution": 0.101,
+        "value": 14.4036
+      },
+      {
+        "feature": "S068",
+        "contribution": 0.0699,
+        "value": 1.552
+      },
+      {
+        "feature": "S334",
+        "contribution": 0.0677,
+        "value": 8.5226
+      },
+      {
+        "feature": "S091",
+        "contribution": -0.0623,
+        "value": 9288.4699
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01459",
+    "stat_date": "2008-10-11",
+    "is_fail": 0,
+    "probability": 0.1677,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S060",
+        "contribution": -0.1969,
+        "value": -2.7973
+      },
+      {
+        "feature": "S066",
+        "contribution": 0.1513,
+        "value": 49.0476
+      },
+      {
+        "feature": "S206",
+        "contribution": 0.1379,
+        "value": 22.0048
+      },
+      {
+        "feature": "S478",
+        "contribution": 0.1323,
+        "value": 15.2161
+      },
+      {
+        "feature": "S122",
+        "contribution": -0.1091,
+        "value": 15.7
+      },
+      {
+        "feature": "S065",
+        "contribution": 0.0983,
+        "value": 35.25
+      },
+      {
+        "feature": "S337",
+        "contribution": 0.0867,
+        "value": 14.4036
+      },
+      {
+        "feature": "S082",
+        "contribution": 0.0702,
+        "value": -0.0015
+      },
+      {
+        "feature": "S198",
+        "contribution": 0.064,
+        "value": 27.9492
+      },
+      {
+        "feature": "S476",
+        "contribution": 0.0631,
+        "value": 6.0646
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01451",
+    "stat_date": "2008-10-10",
+    "is_fail": 0,
+    "probability": 0.1649,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S022",
+        "contribution": 0.1443,
+        "value": -5211.0
+      },
+      {
+        "feature": "S020",
+        "contribution": -0.0954,
+        "value": 12.4455
+      },
+      {
+        "feature": "S337",
+        "contribution": 0.0862,
+        "value": 11.5123
+      },
+      {
+        "feature": "S417",
+        "contribution": 0.0749,
+        "value": 2.486
+      },
+      {
+        "feature": "S548",
+        "contribution": -0.0741,
+        "value": 394.748
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.069,
+        "value": 8.9036
+      },
+      {
+        "feature": "S091",
+        "contribution": 0.0635,
+        "value": 8609.3299
+      },
+      {
+        "feature": "S392",
+        "contribution": -0.061,
+        "value": 0.0131
+      },
+      {
+        "feature": "S486",
+        "contribution": 0.0589,
+        "value": 0.0
+      },
+      {
+        "feature": "S461",
+        "contribution": 0.055,
+        "value": 28.7131
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01345",
+    "stat_date": "2008-10-06",
+    "is_fail": 0,
+    "probability": 0.1572,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S060",
+        "contribution": 0.1,
+        "value": 3.6809
+      },
+      {
+        "feature": "S153",
+        "contribution": 0.0944,
+        "value": 0.8524
+      },
+      {
+        "feature": "S426",
+        "contribution": 0.0851,
+        "value": 8.707
+      },
+      {
+        "feature": "S461",
+        "contribution": 0.0785,
+        "value": 37.3638
+      },
+      {
+        "feature": "S288",
+        "contribution": 0.075,
+        "value": 0.239
+      },
+      {
+        "feature": "S091",
+        "contribution": 0.0718,
+        "value": 8365.7701
+      },
+      {
+        "feature": "S446",
+        "contribution": 0.0675,
+        "value": 0.7484
+      },
+      {
+        "feature": "S130",
+        "contribution": 0.0607,
+        "value": 1.608
+      },
+      {
+        "feature": "S034",
+        "contribution": 0.0572,
+        "value": 9.0744
+      },
+      {
+        "feature": "S470",
+        "contribution": 0.0497,
+        "value": 6.4362
+      }
+    ]
+  },
+  {
+    "wafer_id": "W01531",
+    "stat_date": "2008-10-15",
+    "is_fail": 0,
+    "probability": 0.1499,
+    "method": "TreeSHAP",
+    "drivers": [
+      {
+        "feature": "S461",
+        "contribution": -0.1585,
+        "value": 11.786
+      },
+      {
+        "feature": "S060",
+        "contribution": -0.1577,
+        "value": -0.1882
+      },
+      {
+        "feature": "S288",
+        "contribution": 0.1259,
+        "value": 0.377
+      },
+      {
+        "feature": "S022",
+        "contribution": -0.1129,
+        "value": -5822.75
+      },
+      {
+        "feature": "S214",
+        "contribution": -0.0854,
+        "value": 0.015
+      },
+      {
+        "feature": "S131",
+        "contribution": -0.0835,
+        "value": 0.655
+      },
+      {
+        "feature": "S153",
+        "contribution": 0.0781,
+        "value": 1.3022
+      },
+      {
+        "feature": "S424",
+        "contribution": 0.0737,
+        "value": 132.6865
+      },
+      {
+        "feature": "S427",
+        "contribution": 0.0732,
+        "value": 0.5358
+      },
+      {
+        "feature": "S426",
+        "contribution": 0.0723,
+        "value": 13.925
+      }
+    ]
+  }
+]

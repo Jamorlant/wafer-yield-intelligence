@@ -1,0 +1,106 @@
+project:
+  name: wafer-yield-intelligence
+  seed: 42
+  log_level: INFO
+
+paths:
+  data_dir: data
+  raw_dir: data/raw
+  warehouse: data/warehouse/yield.db
+  artifacts: artifacts
+  dashboard: dashboard
+  logs: logs
+
+secom:
+  # UCI Machine Learning Repository, dataset id 179 (public, no login).
+  download_url: https://archive.ics.uci.edu/static/public/179/secom.zip
+  archive_sha256: EEA568BAF3C2229096D7D294CF0B096B5502BD96D92C0B80A65B84714059BE8E
+  expected_rows: 1567
+  expected_sensors: 590
+
+  quality:
+    # Sensors above this missing rate are excluded from the model feature set.
+    max_missing_rate: 0.40
+    # Sensors with fewer unique values are treated as constants.
+    min_unique_values: 2
+    # Values beyond +/-z * std are winsorised and flagged as outliers.
+    outlier_z: 6.0
+
+  split:
+    train: 0.70
+    valid: 0.15
+    test: 0.15
+
+  # Manufacturing cares about missed failures, so the operating threshold is
+  # chosen from pooled out-of-fold scores at a fixed false-positive budget.
+  target_fpr: 0.05
+
+  # Rolling-origin comparison on the development period (train + validation).
+  backtest:
+    folds: 5
+    initial_fraction: 0.55
+
+  business:
+    # Scenario assumptions used only for the value estimate in docs/.
+    fn_cost_ratio: 10
+    wafer_value_cny: 3000
+    false_alarm_cost_cny: 300
+
+  # Regularised for ~1.3k rows x 440 features; tuned on the validation block.
+  lgbm:
+    n_estimators: 200
+    learning_rate: 0.03
+    num_leaves: 31
+    max_depth: -1
+    min_child_samples: 10
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.2
+    reg_lambda: 5.0
+    reg_alpha: 0.5
+    class_weight: balanced
+    random_state: 42
+    n_jobs: 4
+    verbose: -1
+
+  logistic:
+    C: 0.03
+    max_iter: 5000
+
+  risk_bands:
+    high: 0.60
+    medium: 0.30
+
+wm811k:
+  # Derived 26-feature subset of the CC0 WM-811K dataset (172,950 labelled
+  # wafers, 9 classes). See docs/data_dictionary.md for provenance.
+  download_url: https://api.github.com/repos/ililllilll/WM811K/contents/data/wm811k_labeled.npz
+  representative_url: https://api.github.com/repos/ililllilll/WM811K/contents/data/representative_wafers.json
+  npz_sha256: 95CDCC455C4D3E1FD3AC28D9A237DBC0C2BEE94324C8E1384A17A73360A6EE50
+  representative_sha256: 7CC27E3ABF14BECB8C9CEE81C6727879A7B2B780D0DF2779E1E35B16D66FD3DB
+  class_names:
+    - none
+    - Center
+    - Donut
+    - Edge-Loc
+    - Edge-Ring
+    - Loc
+    - Random
+    - Scratch
+    - Near-full
+  lgbm:
+    n_estimators: 200
+    learning_rate: 0.08
+    num_leaves: 31
+    max_depth: 8
+    min_child_samples: 40
+    subsample: 0.9
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    random_state: 42
+    n_jobs: 4
+    verbose: -1
+  logistic:
+    C: 0.5
+    max_iter: 2000

@@ -1,0 +1,32 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- Local data: never commit raw datasets or generated databases ---
+data/
+logs/
+
+# Generated artefacts: keep the small, reviewable results; ignore models and
+# prediction dumps, which are reproducible with `python -m src.cli all`.
+artifacts/*
+!artifacts/metrics.json
+!artifacts/defect_metrics.json
+!artifacts/quality_report.json
+!artifacts/attributions.json
+!artifacts/feature_importance.csv
+!artifacts/models/
+artifacts/models/*
+!artifacts/models/model_metadata.json
+
+# Generated dashboard data is committed on purpose (small JSON/HTML only).
+
+# --- Tooling ---
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db

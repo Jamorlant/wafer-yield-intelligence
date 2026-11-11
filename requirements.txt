@@ -1,0 +1,10 @@
+# Runtime dependencies. Versions are pinned to the versions used to produce
+# the committed metrics in artifacts/metrics.json (Python 3.13, Windows 11).
+numpy==2.5.4
+pandas==3.1.1
+scikit-learn==1.9.1
+lightgbm==4.7.0
+joblib==1.6.0
+PyYAML==6.0.3
+fastapi==0.162.4
+uvicorn[standard]==0.54.0

@@ -1,0 +1,353 @@
+{
+  "generated_at": "2026-11-11T07:18:53+00:00",
+  "dataset": {
+    "name": "WM-811K (derived 26-feature subset)",
+    "rows": 172950,
+    "classes": 9,
+    "source": "CC0 WM-811K via public GitHub mirror; see docs/data_dictionary.md"
+  },
+  "split": {
+    "train": 54355,
+    "test": 118595,
+    "strategy": "official WM-811K split"
+  },
+  "models": {
+    "lightgbm": {
+      "accuracy": 0.9374003963067583,
+      "balanced_accuracy": 0.6338531839602317,
+      "macro_f1": 0.6024620841067099,
+      "weighted_f1": 0.945065011456797,
+      "per_class": {
+        "none": {
+          "precision": 0.9882049904101846,
+          "recall": 0.9634420646606625,
+          "f1": 0.9756664288197303,
+          "support": 110701
+        },
+        "Center": {
+          "precision": 0.42210020590253944,
+          "recall": 0.7391826923076923,
+          "f1": 0.5373525557011796,
+          "support": 832
+        },
+        "Donut": {
+          "precision": 0.5153846153846153,
+          "recall": 0.4589041095890411,
+          "f1": 0.4855072463768116,
+          "support": 146
+        },
+        "Edge-Loc": {
+          "precision": 0.5240513094601817,
+          "recall": 0.7074314574314574,
+          "f1": 0.6020878108688977,
+          "support": 2772
+        },
+        "Edge-Ring": {
+          "precision": 0.6885069817400644,
+          "recall": 0.5692717584369449,
+          "f1": 0.6232377248420029,
+          "support": 1126
+        },
+        "Loc": {
+          "precision": 0.4271255060728745,
+          "recall": 0.4277749619868221,
+          "f1": 0.4274499873385667,
+          "support": 1973
+        },
+        "Random": {
+          "precision": 0.8317307692307693,
+          "recall": 0.6731517509727627,
+          "f1": 0.7440860215053764,
+          "support": 257
+        },
+        "Scratch": {
+          "precision": 0.05757432751297782,
+          "recall": 0.17604617604617603,
+          "f1": 0.08677098150782361,
+          "support": 693
+        },
+        "Near-full": {
+          "precision": 0.8952380952380953,
+          "recall": 0.9894736842105263,
+          "f1": 0.94,
+          "support": 95
+        }
+      }
+    },
+    "logistic_regression": {
+      "accuracy": 0.8671191871495426,
+      "balanced_accuracy": 0.6114742036907379,
+      "macro_f1": 0.49883724994575346,
+      "weighted_f1": 0.9069321636930044,
+      "per_class": {
+        "none": {
+          "precision": 0.9909849515728808,
+          "recall": 0.8946892981996549,
+          "f1": 0.9403783616985925,
+          "support": 110701
+        },
+        "Center": {
+          "precision": 0.3077445652173913,
+          "recall": 0.5444711538461539,
+          "f1": 0.3932291666666667,
+          "support": 832
+        },
+        "Donut": {
+          "precision": 0.06018916595012898,
+          "recall": 0.4794520547945205,
+          "f1": 0.10695187165775401,
+          "support": 146
+        },
+        "Edge-Loc": {
+          "precision": 0.5477941176470589,
+          "recall": 0.5375180375180375,
+          "f1": 0.5426074289876184,
+          "support": 2772
+        },
+        "Edge-Ring": {
+          "precision": 0.6071428571428571,
+          "recall": 0.5284191829484902,
+          "f1": 0.5650522317188984,
+          "support": 1126
+        },
+        "Loc": {
+          "precision": 0.44905956112852663,
+          "recall": 0.2904206791687785,
+          "f1": 0.3527239150507849,
+          "support": 1973
+        },
+        "Random": {
+          "precision": 0.45601851851851855,
+          "recall": 0.7665369649805448,
+          "f1": 0.5718432510885341,
+          "support": 257
+        },
+        "Scratch": {
+          "precision": 0.03046168491194669,
+          "recall": 0.46176046176046176,
+          "f1": 0.05715306304697267,
+          "support": 693
+        },
+        "Near-full": {
+          "precision": 0.9223300970873787,
+          "recall": 1.0,
+          "f1": 0.9595959595959596,
+          "support": 95
+        }
+      }
+    }
+  },
+  "selected_model": "lightgbm",
+  "confusion_matrix": [
+    [
+      106654,
+      606,
+      20,
+      995,
+      161,
+      542,
+      7,
+      1716,
+      0
+    ],
+    [
+      157,
+      615,
+      4,
+      12,
+      3,
+      14,
+      4,
+      22,
+      1
+    ],
+    [
+      8,
+      34,
+      67,
+      4,
+      1,
+      25,
+      5,
+      2,
+      0
+    ],
+    [
+      266,
+      21,
+      8,
+      1961,
+      121,
+      282,
+      11,
+      100,
+      2
+    ],
+    [
+      275,
+      6,
+      0,
+      193,
+      641,
+      2,
+      0,
+      9,
+      0
+    ],
+    [
+      355,
+      162,
+      24,
+      431,
+      2,
+      844,
+      7,
+      148,
+      0
+    ],
+    [
+      19,
+      3,
+      6,
+      29,
+      0,
+      19,
+      173,
+      0,
+      8
+    ],
+    [
+      193,
+      10,
+      1,
+      117,
+      2,
+      248,
+      0,
+      122,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      94
+    ]
+  ],
+  "class_order": [
+    "none",
+    "Center",
+    "Donut",
+    "Edge-Loc",
+    "Edge-Ring",
+    "Loc",
+    "Random",
+    "Scratch",
+    "Near-full"
+  ],
+  "class_distribution": {
+    "none": {
+      "Test": 110701,
+      "Training": 36730
+    },
+    "Center": {
+      "Test": 832,
+      "Training": 3462
+    },
+    "Donut": {
+      "Test": 146,
+      "Training": 409
+    },
+    "Edge-Loc": {
+      "Test": 2772,
+      "Training": 2417
+    },
+    "Edge-Ring": {
+      "Test": 1126,
+      "Training": 8554
+    },
+    "Loc": {
+      "Test": 1973,
+      "Training": 1620
+    },
+    "Random": {
+      "Test": 257,
+      "Training": 609
+    },
+    "Scratch": {
+      "Test": 693,
+      "Training": 500
+    },
+    "Near-full": {
+      "Test": 95,
+      "Training": 54
+    }
+  },
+  "top_features": [
+    {
+      "feature": "largest_cluster_ratio",
+      "gain": 185510.92959,
+      "split": 3364
+    },
+    {
+      "feature": "defect_spread_y",
+      "gain": 154129.53711,
+      "split": 2598
+    },
+    {
+      "feature": "radial_std",
+      "gain": 136664.82512,
+      "split": 3074
+    },
+    {
+      "feature": "defect_density",
+      "gain": 91690.81857,
+      "split": 589
+    },
+    {
+      "feature": "mid_defect_ratio",
+      "gain": 80838.19779,
+      "split": 2299
+    },
+    {
+      "feature": "bottom_defect_ratio",
+      "gain": 77551.28503,
+      "split": 1468
+    },
+    {
+      "feature": "quadrant_imbalance",
+      "gain": 75654.69956,
+      "split": 2710
+    },
+    {
+      "feature": "radial_mean",
+      "gain": 72220.66017,
+      "split": 2543
+    },
+    {
+      "feature": "fail_die",
+      "gain": 55257.10168,
+      "split": 2350
+    },
+    {
+      "feature": "edge_defect_ratio",
+      "gain": 52604.33447,
+      "split": 2205
+    },
+    {
+      "feature": "center_defect_ratio",
+      "gain": 48760.14694,
+      "split": 2161
+    },
+    {
+      "feature": "defect_spread_x",
+      "gain": 48507.33703,
+      "split": 2662
+    }
+  ]
+}
