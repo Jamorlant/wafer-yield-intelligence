@@ -6,8 +6,8 @@ __pycache__/
 venv/
 
 # --- Local data: never commit raw datasets or generated databases ---
-data/
-logs/
+/data/
+/logs/
 
 # Generated artefacts: keep the small, reviewable results; ignore models and
 # prediction dumps, which are reproducible with `python -m src.cli all`.
