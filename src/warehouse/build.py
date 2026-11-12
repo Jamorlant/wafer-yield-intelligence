@@ -37,7 +37,7 @@ from src.quality.rules import wm811k_validity
 
 log = logging.getLogger(__name__)
 
-STEPS = ("ods", "dwd", "dws", "ads")
+STEPS = ("ods", "dwd", "dws", "ads", "mes_ods", "mes_dwd", "mes_dws", "mes_ads")
 DERIVED_FEATURES = ["z_mean", "z_std", "z_max_abs", "abnormal_cnt"]
 
 
@@ -424,6 +424,30 @@ def _build_ads(conn, cfg: dict) -> int:
     return len(matrix) + len(trend) + len(drift)
 
 
+def _build_mes_ods(conn, cfg: dict) -> int:
+    from src.warehouse.mes import build_mes_ods
+
+    return build_mes_ods(conn, cfg)
+
+
+def _build_mes_dwd(conn, cfg: dict) -> int:
+    from src.warehouse.mes import build_mes_dwd
+
+    return build_mes_dwd(conn, cfg)
+
+
+def _build_mes_dws(conn, cfg: dict) -> int:
+    from src.warehouse.mes import build_mes_dws
+
+    return build_mes_dws(conn, cfg)
+
+
+def _build_mes_ads(conn, cfg: dict) -> int:
+    from src.warehouse.mes import build_mes_ads
+
+    return build_mes_ads(conn, cfg)
+
+
 def _latest_run_id(conn) -> str:
     row = conn.execute("SELECT run_id FROM meta_pipeline_run ORDER BY started_at DESC LIMIT 1").fetchone()
     return row["run_id"] if row else "unknown"
@@ -435,7 +459,16 @@ def _latest_run_id(conn) -> str:
 def build_warehouse(cfg: dict, *, resume: bool = True) -> dict:
     db_path = path_of(cfg, "warehouse")
     fingerprint = data_fingerprint(cfg)
-    builders = {"ods": _build_ods, "dwd": _build_dwd, "dws": _build_dws, "ads": _build_ads}
+    builders = {
+        "ods": _build_ods,
+        "dwd": _build_dwd,
+        "dws": _build_dws,
+        "ads": _build_ads,
+        "mes_ods": _build_mes_ods,
+        "mes_dwd": _build_mes_dwd,
+        "mes_dws": _build_mes_dws,
+        "mes_ads": _build_mes_ads,
+    }
     summary: dict[str, int] = {}
 
     with connect(db_path) as conn:

@@ -175,6 +175,119 @@ def run_quality_checks(cfg: dict) -> dict:
             )
         )
 
+        # ------------------------------------------------------------ MES demo
+        mes = cfg["mes"]
+        expected_lots = (
+            len(mes["lines"]) * int(mes["days"]) * 3 * int(mes["lots_per_shift"])
+        )
+        expected_steps = expected_lots * len(mes["processes"])
+        lot_cnt = conn.execute("SELECT COUNT(*) AS c FROM ods_mes_lot").fetchone()["c"]
+        step_cnt = conn.execute("SELECT COUNT(*) AS c FROM dwd_mes_process").fetchone()["c"]
+        checks.append(_check("mes_lot_row_count", "pass" if lot_cnt == expected_lots else "fail", lot_cnt, expected_lots))
+        checks.append(
+            _check(
+                "mes_step_row_count",
+                "pass" if step_cnt == expected_steps else "fail",
+                step_cnt,
+                expected_steps,
+                f"{len(mes['lines'])} lines x {mes['days']} days x 3 shifts x {mes['lots_per_shift']} lots x {len(mes['processes'])} steps",
+            )
+        )
+
+        bad_qty = conn.execute("SELECT COUNT(*) AS c FROM dwd_mes_process WHERE is_qty_consistent = 0").fetchone()["c"]
+        checks.append(
+            _check(
+                "mes_quantity_conservation",
+                "pass" if bad_qty == 0 else "fail",
+                bad_qty,
+                0,
+                "input = output + defect at every step; output(k) = input(k+1)",
+            )
+        )
+
+        bad_route = conn.execute(
+            "SELECT COUNT(*) AS c FROM dwd_mes_lot_route WHERE is_qty_consistent = 0"
+        ).fetchone()["c"]
+        checks.append(
+            _check(
+                "mes_route_yield_parity",
+                "pass" if bad_route == 0 else "fail",
+                bad_route,
+                0,
+                "lot-level yield recomputed from step 1 input and last step output equals the lot header",
+            )
+        )
+
+        dirty_yield = conn.execute(
+            "SELECT COUNT(*) AS c FROM dwd_mes_process WHERE step_yield <= 0.80 OR step_yield > 1.0"
+        ).fetchone()["c"]
+        checks.append(_check("mes_step_yield_domain", "pass" if dirty_yield == 0 else "fail", dirty_yield, 0))
+
+        days_covered = conn.execute(
+            "SELECT COUNT(DISTINCT stat_date) AS c FROM dwd_mes_lot_route"
+        ).fetchone()["c"]
+        checks.append(
+            _check(
+                "mes_time_continuity",
+                "pass" if days_covered == int(mes["days"]) else "fail",
+                days_covered,
+                int(mes["days"]),
+                "one row per production day, no gaps",
+            )
+        )
+
+        kpi_drift = conn.execute(
+            """
+            SELECT COUNT(*) AS c FROM (
+                SELECT k.line_code, k.stat_date, k.yield_final, d.yield_final AS dws_yield
+                FROM ads_mes_kpi_daily k
+                JOIN dws_mes_line_daily d
+                  ON d.line_code = k.line_code AND d.stat_date = k.stat_date
+                WHERE ABS(k.yield_final - d.yield_final) > 1e-9
+            )
+            """
+        ).fetchone()["c"]
+        checks.append(
+            _check("mes_kpi_caliber_consistency", "pass" if kpi_drift == 0 else "fail", kpi_drift, 0, "ADS yield = sum(good)/sum(input)")
+        )
+
+        scenario_cnt = conn.execute("SELECT COUNT(*) AS c FROM ods_mes_scenario").fetchone()["c"]
+        verified = conn.execute(
+            "SELECT COUNT(*) AS c FROM ads_mes_scenario_check WHERE verdict = 'MATCH'"
+        ).fetchone()["c"]
+        checks.append(
+            _check(
+                "mes_scenario_detected",
+                "pass" if verified == scenario_cnt else "fail",
+                f"{verified}/{scenario_cnt}",
+                "all injected scenarios detected",
+                "each injected drift must produce the expected SPC rule, a step-yield drop and a final-yield drop",
+            )
+        )
+
+        untraced = conn.execute("SELECT COUNT(*) AS c FROM ads_mes_alert WHERE scenario_id = ''").fetchone()["c"]
+        checks.append(
+            _check(
+                "mes_alert_traceability",
+                "pass" if untraced == 0 else "warn",
+                untraced,
+                "0 in synthetic demo",
+                "every alert in this synthetic dataset maps 1:1 to an injected scenario; "
+                "on a real MES export orphan alerts are expected and become investigation work",
+            )
+        )
+
+        labelled = conn.execute("SELECT source FROM ods_mes_asset WHERE asset_name = 'mes_extract'").fetchone()
+        checks.append(
+            _check(
+                "mes_source_labelled",
+                "pass" if labelled is not None else "fail",
+                labelled["source"] if labelled else "missing",
+                "synthetic | export",
+                "the dashboard banner and README must state the data source",
+            )
+        )
+
         statuses = {check["status"] for check in checks}
         overall = "fail" if "fail" in statuses else "warn" if "warn" in statuses else "pass"
 
@@ -189,6 +302,10 @@ def run_quality_checks(cfg: dict) -> dict:
                 "usable_sensors": int(profile["is_usable"].sum()),
                 "max_sensor_missing_rate": round(max_missing, 4),
                 "split": {k: int(v) for k, v in split_counts.items()},
+                "mes_lots": int(lot_cnt),
+                "mes_step_rows": int(step_cnt),
+                "mes_scenarios_verified": f"{verified}/{scenario_cnt}",
+                "mes_untraced_alerts": int(untraced),
             },
             "checks": checks,
         }

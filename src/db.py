@@ -59,3 +59,15 @@ def table_exists(conn: sqlite3.Connection, table: str) -> bool:
         "SELECT 1 FROM sqlite_master WHERE type IN ('table','view') AND name = ?", (table,)
     ).fetchone()
     return row is not None
+
+
+def bulk_insert(conn: sqlite3.Connection, df: pd.DataFrame, table: str, columns: list[str]) -> int:
+    """Fast ``executemany`` insert for wide tables (100k+ rows).
+
+    ``DataFrame.to_sql`` is fine for small frames but spends most of its time
+    building SQL strings; MES facts are written with a prepared statement.
+    """
+    placeholders = ",".join("?" for _ in columns)
+    statement = f"INSERT INTO {table} ({','.join(columns)}) VALUES ({placeholders})"
+    conn.executemany(statement, df[columns].itertuples(index=False, name=None))
+    return len(df)

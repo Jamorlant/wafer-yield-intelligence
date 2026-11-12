@@ -4,6 +4,7 @@ Examples
 --------
 python -m src.cli all          # download -> warehouse -> quality -> models -> dashboard
 python -m src.cli warehouse    # rebuild layers (idempotent)
+python -m src.cli scenario     # verify injected anomalies against SPC alerts
 python -m src.cli train        # yield model only
 python -m src.cli defect       # 9-class defect model only
 python -m src.cli serve        # FastAPI on http://127.0.0.1:8000
@@ -83,6 +84,77 @@ def cmd_dashboard(cfg: dict, args) -> int:
     return 0
 
 
+def cmd_scenario(cfg: dict, args) -> int:
+    """Print the injected-anomaly -> SPC-alert causal chain stored in ADS.
+
+    This is the live verification used in the demo: every injected scenario
+    must come back ``MATCH`` and every alert must carry a ``scenario_id``.
+    """
+    import json as _json
+
+    from src.db import connect, read_df
+
+    with connect(path_of(cfg, "warehouse")) as conn:
+        scenarios = read_df(conn, "SELECT * FROM ads_mes_scenario_check ORDER BY scenario_id")
+        alerts = read_df(conn, "SELECT * FROM ads_mes_alert ORDER BY alert_ts")
+
+    if scenarios.empty:
+        log.error("no scenario verification rows; run `python -m src.cli warehouse` first")
+        return 1
+    payload = []
+    for row in scenarios.itertuples():
+        detail = _json.loads(row.detail)
+        chain, lag = detail.get("chain", {}), detail.get("lag_hours", {})
+        item = {
+            "scenario_id": row.scenario_id,
+            "title": detail.get("title"),
+            "expected_rule": row.expected_rule,
+            "detected_rule": row.detected_rule,
+            "verdict": row.verdict,
+            "checks": detail.get("checks"),
+            "chain": chain,
+            "lag_hours": lag,
+            "step_drop_pp": row.step_drop_pp,
+            "final_drop_pp": row.final_drop_pp,
+        }
+        payload.append(item)
+        log.info(
+            "%s %s [%s] %s -> %s | drift %s -> breach %s -> step drop %s -> alert %s -> final drop %s",
+            row.scenario_id,
+            item["title"],
+            row.verdict,
+            row.expected_rule,
+            row.detected_rule,
+            chain.get("drift_start"),
+            chain.get("first_param_breach"),
+            chain.get("first_step_yield_drop"),
+            chain.get("first_alert"),
+            chain.get("first_final_yield_drop"),
+        )
+        log.info(
+            "    lag(h): drift->breach %s, ->step %s, ->alert %s, ->final %s | step %+.2fpp final %+.2fpp",
+            lag.get("drift_to_param_breach"),
+            lag.get("drift_to_step_yield_drop"),
+            lag.get("drift_to_alert"),
+            lag.get("drift_to_final_yield_drop"),
+            row.step_drop_pp,
+            row.final_drop_pp,
+        )
+
+    untraced = alerts[alerts["scenario_id"].fillna("") == ""]
+    if not alerts.empty:
+        log.info(
+            "alerts: %d total, %d traced to an injected scenario, %d untraced",
+            len(alerts),
+            len(alerts) - len(untraced),
+            len(untraced),
+        )
+    if args.json:
+        print(_json.dumps({"scenarios": payload, "untraced_alerts": len(untraced)}, ensure_ascii=False, indent=2))
+    ok = bool((scenarios["verdict"] == "MATCH").all()) and len(untraced) == 0
+    return 0 if ok else 1
+
+
 def cmd_serve(cfg: dict, args) -> int:
     import uvicorn
 
@@ -91,7 +163,7 @@ def cmd_serve(cfg: dict, args) -> int:
 
 
 def cmd_all(cfg: dict, args) -> int:
-    for step in (cmd_download, cmd_warehouse, cmd_quality, cmd_train, cmd_defect, cmd_dashboard):
+    for step in (cmd_download, cmd_warehouse, cmd_quality, cmd_scenario, cmd_train, cmd_defect, cmd_dashboard):
         code = step(cfg, args)
         if code != 0:
             log.error("pipeline stopped at %s", step.__name__)
@@ -125,13 +197,17 @@ def build_parser() -> argparse.ArgumentParser:
     dashboard = sub.add_parser("dashboard", help="render the static dashboard")
     dashboard.set_defaults(func=cmd_dashboard)
 
+    scenario = sub.add_parser("scenario", help="verify injected anomalies against SPC alerts")
+    scenario.add_argument("--json", action="store_true", help="print the full chain as JSON")
+    scenario.set_defaults(func=cmd_scenario)
+
     serve = sub.add_parser("serve", help="start the FastAPI service")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
     serve.set_defaults(func=cmd_serve)
 
     run_all = sub.add_parser("all", help="run every stage end to end")
-    run_all.set_defaults(func=cmd_all, force=False, resume=True)
+    run_all.set_defaults(func=cmd_all, force=False, resume=True, json=False)
     return parser
 
 

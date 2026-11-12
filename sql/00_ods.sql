@@ -10,6 +10,7 @@
 --     real measured zero. This distinction drives the quality report.
 -- =============================================================================
 
+DROP TABLE IF EXISTS ods_secom_sensor_value;  -- child first: FK -> ods_secom_wafer
 DROP TABLE IF EXISTS ods_secom_wafer;
 CREATE TABLE ods_secom_wafer (
     wafer_id        TEXT PRIMARY KEY,          -- synthetic key: W00001 .. W01567
@@ -19,7 +20,6 @@ CREATE TABLE ods_secom_wafer (
     ingested_at     TEXT NOT NULL
 );
 
-DROP TABLE IF EXISTS ods_secom_sensor_value;
 CREATE TABLE ods_secom_sensor_value (
     wafer_id  TEXT NOT NULL,
     sensor_id TEXT NOT NULL,                   -- S001 .. S590 (source column order)

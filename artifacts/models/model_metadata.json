@@ -1,5 +1,5 @@
 {
-  "trained_at": "2026-11-11T07:17:51+00:00",
+  "trained_at": "2026-11-12T11:31:11+00:00",
   "selected_model": "lightgbm",
   "model_type": "lightgbm",
   "model_file": "yield_lgbm.txt",

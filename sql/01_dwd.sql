@@ -12,6 +12,7 @@
 --      (is_outlier = 1). The original value is not lost: ODS keeps it.
 -- =============================================================================
 
+DROP TABLE IF EXISTS dwd_sensor_value;  -- child first (FK -> dwd_wafer_label)
 DROP TABLE IF EXISTS dwd_wafer_label;
 CREATE TABLE dwd_wafer_label (
     wafer_id       TEXT PRIMARY KEY,
@@ -42,7 +43,6 @@ CREATE TABLE dwd_sensor_profile (
     is_usable       INTEGER NOT NULL
 );
 
-DROP TABLE IF EXISTS dwd_sensor_value;
 CREATE TABLE dwd_sensor_value (
     wafer_id   TEXT NOT NULL,
     sensor_id  TEXT NOT NULL,

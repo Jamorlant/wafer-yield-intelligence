@@ -71,6 +71,155 @@ secom:
     high: 0.60
     medium: 0.30
 
+# --------------------------------------------------------------------------- #
+# Synthetic MES demo (main story). The data is 100% synthetic and labelled as
+# such everywhere: dashboard banner, README, docs. Real fab data is under NDA;
+# the generator exists so the pipeline, SPC rules and drill-down can be shown
+# end to end. Switch `source` to `export` to read a real MES extract instead.
+# --------------------------------------------------------------------------- #
+mes:
+  source: synthetic            # synthetic | export
+  export_dir: data/raw/mes_export
+  seed: 20261112
+  start_date: "2026-08-13"     # 90 days, last day = 2026-11-10
+  days: 90
+  lots_per_shift: 100          # 3 lines x 90 days x 3 shifts x 100 = 81,000 lots
+  lot_size: 600                # units (strips) per lot
+  shift_hours: 8
+  process_cycle_hours: 1.0
+
+  lines:
+    - {code: LINE-A, name: A 线, yield_bias: 0.0025}
+    - {code: LINE-B, name: B 线, yield_bias: -0.0015}
+    - {code: LINE-C, name: C 线, yield_bias: 0.0}
+
+  products:
+    - {code: PROD-01, name: 电源管理芯片, mix: 0.32, yield_bias: 0.0010}
+    - {code: PROD-02, name: 射频前端模组, mix: 0.28, yield_bias: -0.0020}
+    - {code: PROD-03, name: 存储控制芯片, mix: 0.24, yield_bias: 0.0}
+    - {code: PROD-04, name: 车规 MCU, mix: 0.16, yield_bias: -0.0040}
+
+  # Five process parameters per step; only `key: true` parameters enter SPC.
+  processes:
+    - code: GRIND
+      name: 研磨
+      equipment_prefix: EQ-GR
+      owner: 设备工程师
+      base_yield: 0.997
+      defect_code: SCRATCH
+      params:
+        - {code: spindle_speed, name: 主轴转速, unit: rpm, base: 2400, sd: 12, key: false}
+        - {code: feed_rate, name: 进给速度, unit: mm/s, base: 0.35, sd: 0.01, key: false}
+        - {code: coolant_temp, name: 冷却液温度, unit: C, base: 22, sd: 0.3, key: true}
+        - {code: thickness_um, name: 目标厚度, unit: um, base: 180, sd: 1.2, key: true}
+        - {code: wheel_wear, name: 砂轮磨损量, unit: mm, base: 0.12, sd: 0.004, key: false}
+    - code: DICE
+      name: 切割
+      equipment_prefix: EQ-DC
+      owner: 设备工程师
+      base_yield: 0.996
+      defect_code: CHIP
+      params:
+        - {code: blade_speed, name: 划片刀转速, unit: mm/s, base: 45, sd: 0.3, key: false}
+        - {code: feed_speed, name: 进给速度, unit: mm/s, base: 12, sd: 0.1, key: false}
+        - {code: spindle_current, name: 主轴电流, unit: A, base: 3.2, sd: 0.05, key: true}
+        - {code: kerf_width, name: 切割道宽度, unit: um, base: 40, sd: 0.3, key: true}
+        - {code: water_flow, name: 冷却水流量, unit: L/min, base: 8, sd: 0.2, key: false}
+    - code: DIE_ATTACH
+      name: 贴片
+      equipment_prefix: EQ-DA
+      owner: 设备工程师
+      base_yield: 0.992
+      defect_code: VOID
+      params:
+        - {code: bond_temp, name: 键合温度, unit: C, base: 175, sd: 1.1, key: true}
+        - {code: bond_force, name: 键合压力, unit: N, base: 4.2, sd: 0.05, key: false}
+        - {code: bond_time, name: 键合时间, unit: ms, base: 120, sd: 1.5, key: false}
+        - {code: epoxy_weight, name: 点胶量, unit: mg, base: 0.32, sd: 0.008, key: false}
+        - {code: placement_offset, name: 贴装偏移, unit: um, base: 25, sd: 1.2, key: true}
+    - code: WIRE_BOND
+      name: 焊线
+      equipment_prefix: EQ-WB
+      owner: 工艺工程师
+      base_yield: 0.991
+      defect_code: WIRE_SWEEP
+      params:
+        - {code: bond_temp, name: 键合温度, unit: C, base: 150, sd: 1.0, key: false}
+        - {code: bond_force, name: 键合压力, unit: N, base: 0.45, sd: 0.01, key: true}
+        - {code: bond_time, name: 键合时间, unit: ms, base: 25, sd: 0.3, key: false}
+        - {code: loop_height, name: 弧高, unit: um, base: 120, sd: 1.5, key: true}
+        - {code: wire_tension, name: 线张力, unit: cN, base: 6.5, sd: 0.15, key: false}
+    - code: MOLD
+      name: 塑封
+      equipment_prefix: EQ-MD
+      owner: 工艺工程师
+      base_yield: 0.998
+      defect_code: MOLD_VOID
+      params:
+        - {code: mold_temp, name: 模温, unit: C, base: 175, sd: 1.2, key: false}
+        - {code: mold_pressure, name: 模压压力, unit: MPa, base: 8.5, sd: 0.06, key: true}
+        - {code: cure_time, name: 固化时间, unit: s, base: 90, sd: 0.8, key: false}
+        - {code: transfer_speed, name: 传递速度, unit: mm/s, base: 2.4, sd: 0.05, key: false}
+        - {code: void_rate, name: 空洞率, unit: pct, base: 0.8, sd: 0.05, key: true}
+    - code: TEST
+      name: 测试
+      equipment_prefix: EQ-TS
+      owner: 测试工程师
+      base_yield: 0.975
+      defect_code: ELEC_FAIL
+      params:
+        - {code: test_temp, name: 测试温度, unit: C, base: 85, sd: 0.8, key: false}
+        - {code: contact_resistance, name: 接触电阻, unit: mOhm, base: 45, sd: 1.5, key: true}
+        - {code: test_voltage, name: 测试电压, unit: V, base: 3.3, sd: 0.01, key: false}
+        - {code: test_current, name: 测试电流, unit: mA, base: 120, sd: 1.2, key: false}
+        - {code: retest_rate, name: 重测率, unit: pct, base: 1.5, sd: 0.08, key: true}
+
+  spc:
+    baseline_days: 60           # control limits are frozen on the first 60 days
+    sigma_limit: 3.0
+    run_length: 7
+    run_mean_sigma: 2.0
+    sustained_points: 3
+    min_samples_per_hour: 2
+
+  # Injected anomaly scenarios. Ground truth is written to ods_mes_process
+  # (scenario_id) and verified against the SPC alerts by the quality gate, so
+  # "injected anomaly" and "dashboard alert" can never silently diverge.
+  scenarios:
+    - id: S1
+      title: 贴片机温控漂移导致焊点空洞
+      line: LINE-B
+      process: DIE_ATTACH
+      equipment: EQ-DA-02
+      param: bond_temp
+      start_ts: "2026-11-09T00:00:00"
+      duration_hours: 48
+      ramp_hours: 6
+      magnitude_sigma: 8.0
+      yield_penalty_pp: 4.2
+      yield_lag_hours: 0.5
+      defect_code: VOID
+      owner: 设备工程师
+      expected_rule: R1_3SIGMA
+    - id: S2
+      title: 塑封模压压力缓慢漂移
+      line: LINE-A
+      process: MOLD
+      equipment: EQ-MD-01
+      param: mold_pressure
+      start_ts: "2026-10-20T00:00:00"
+      duration_hours: 240
+      ramp_hours: 240
+      magnitude_sigma: 5.0
+      yield_penalty_pp: 3.0
+      yield_lag_hours: 6.0
+      defect_code: MOLD_VOID
+      owner: 工艺工程师
+      expected_rule: R2_SEVEN_POINT
+
+  suspect:
+    lookback_hours: 8          # lots processed by the tool before the alert fires
+
 wm811k:
   # Derived 26-feature subset of the CC0 WM-811K dataset (172,950 labelled
   # wafers, 9 classes). See docs/data_dictionary.md for provenance.

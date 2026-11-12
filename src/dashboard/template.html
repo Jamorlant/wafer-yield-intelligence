@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Wafer Yield Intelligence · 良率与缺陷分析看板</title>
+<title>Wafer Yield Intelligence · 封测良率与设备异常 BI</title>
 <style>
   :root {
     --bg: #070d18;
@@ -27,17 +27,46 @@
     font-family: "Inter", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
     min-height: 100vh;
   }
-  .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 24px 60px; }
-  header.top { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
-  .title h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.5px; }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 18px 24px 60px; }
+
+  /* ---- synthetic data banner: deliberately impossible to miss ---- */
+  .banner {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: linear-gradient(100deg, rgba(245, 158, 11, .20), rgba(239, 68, 68, .16));
+    border: 1px solid rgba(245, 158, 11, .55);
+    border-left: 6px solid var(--amber);
+    border-radius: 12px; padding: 13px 16px; margin-bottom: 18px;
+  }
+  .banner .tag {
+    flex: none; background: var(--amber); color: #1a1205; font-weight: 700;
+    font-size: 12px; letter-spacing: .5px; border-radius: 6px; padding: 5px 9px; margin-top: 1px;
+  }
+  .banner .body { font-size: 13px; line-height: 1.65; }
+  .banner .body b { color: #fde68a; }
+  .banner .body .swap { color: var(--muted); }
+  .banner code { background: rgba(0,0,0,.35); border-radius: 4px; padding: 1px 5px; font-size: 12px; color: #fcd34d; }
+
+  header.top { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+  .title h1 { margin: 0 0 6px; font-size: 29px; letter-spacing: -0.5px; }
   .title h1 span { color: var(--accent); }
-  .title p { margin: 0; color: var(--muted); font-size: 14px; }
+  .title p { margin: 0; color: var(--muted); font-size: 13.5px; }
   .badges { display: flex; gap: 8px; flex-wrap: wrap; }
   .badge {
     font-size: 12px; color: var(--muted); border: 1px solid var(--border);
     background: rgba(18, 29, 49, 0.7); border-radius: 999px; padding: 6px 11px;
   }
   .badge b { color: var(--text); font-weight: 600; }
+
+  nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 16px; position: sticky; top: 0; z-index: 20; background: rgba(7, 13, 24, .92); backdrop-filter: blur(6px); padding-top: 6px; }
+  nav.tabs button {
+    background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent;
+    padding: 10px 14px; font-size: 13.5px; cursor: pointer; font-family: inherit;
+  }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .view { display: none; }
+  .view.active { display: block; }
+
   .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
   .kpi {
     background: linear-gradient(160deg, rgba(27, 44, 70, 0.9), rgba(14, 23, 38, 0.9));
@@ -47,66 +76,120 @@
   .kpi::after { content: ""; position: absolute; inset: 0 auto auto 0; width: 100%; height: 2px; background: var(--accent); opacity: .7; }
   .kpi.good::after { background: var(--green); }
   .kpi.warn::after { background: var(--amber); }
+  .kpi.bad::after { background: var(--red); }
   .kpi .label { color: var(--muted); font-size: 12px; letter-spacing: .3px; }
-  .kpi .value { font-size: 26px; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .kpi .value { font-size: 25px; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .kpi .sub { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
   .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
   .card {
     background: var(--card); border: 1px solid var(--border); border-radius: 14px;
     padding: 16px 18px; min-width: 0;
   }
-  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .card h2 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
-  .card .hint { margin: 0 0 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .card .hint { margin: 0 0 10px; color: var(--muted); font-size: 12px; line-height: 1.55; }
   .chart { width: 100%; height: 300px; }
-  .chart.short { height: 250px; }
+  .chart.short { height: 240px; }
   .span3 { grid-column: span 3; } .span4 { grid-column: span 4; }
   .span5 { grid-column: span 5; } .span6 { grid-column: span 6; }
   .span7 { grid-column: span 7; } .span8 { grid-column: span 8; }
   .span9 { grid-column: span 9; } .span12 { grid-column: span 12; }
-  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-  select {
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar label { color: var(--muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+  select, input[type=date] {
     background: #0c1728; color: var(--text); border: 1px solid var(--border);
-    border-radius: 8px; padding: 7px 10px; font-size: 12px; outline: none;
+    border-radius: 8px; padding: 7px 10px; font-size: 12px; outline: none; font-family: inherit;
   }
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  th { text-align: left; color: var(--muted); font-weight: 500; padding: 7px 8px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card-strong); }
-  td { padding: 7px 8px; border-bottom: 1px solid rgba(32, 48, 74, .55); }
-  tbody tr { cursor: pointer; }
+  th { text-align: left; color: var(--muted); font-weight: 500; padding: 7px 8px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card-strong); z-index: 1; }
+  td { padding: 7px 8px; border-bottom: 1px solid rgba(32, 48, 74, .55); vertical-align: top; }
   tbody tr:hover { background: rgba(56, 189, 248, .07); }
-  .table-scroll { max-height: 300px; overflow: auto; }
-  .pill { border-radius: 999px; padding: 2px 8px; font-size: 11px; border: 1px solid transparent; white-space: nowrap; }
-  .pill.high { background: rgba(239, 68, 68, .16); color: #fca5a5; border-color: rgba(239, 68, 68, .35); }
-  .pill.medium { background: rgba(245, 158, 11, .14); color: #fcd34d; border-color: rgba(245, 158, 11, .3); }
-  .pill.low { background: rgba(34, 197, 94, .12); color: #86efac; border-color: rgba(34, 197, 94, .3); }
-  .pill.fail { background: rgba(239, 68, 68, .16); color: #fca5a5; }
-  .pill.pass { background: rgba(34, 197, 94, .12); color: #86efac; }
-  .pill.warn { background: rgba(245, 158, 11, .14); color: #fcd34d; }
+  tbody tr.clickable { cursor: pointer; }
+  .table-scroll { max-height: 330px; overflow: auto; }
+  .pill { border-radius: 999px; padding: 2px 8px; font-size: 11px; border: 1px solid transparent; white-space: nowrap; display: inline-block; }
+  .pill.high, .pill.fail, .pill.alert { background: rgba(239, 68, 68, .16); color: #fca5a5; border-color: rgba(239, 68, 68, .35); }
+  .pill.medium, .pill.warn, .pill.watch { background: rgba(245, 158, 11, .14); color: #fcd34d; border-color: rgba(245, 158, 11, .3); }
+  .pill.low, .pill.pass, .pill.normal { background: rgba(34, 197, 94, .12); color: #86efac; border-color: rgba(34, 197, 94, .3); }
+  .pill.match { background: rgba(34, 197, 94, .16); color: #86efac; border-color: rgba(34, 197, 94, .4); }
+  .pill.mismatch { background: rgba(239, 68, 68, .16); color: #fca5a5; border-color: rgba(239, 68, 68, .4); }
   .mono { font-family: "JetBrains Mono", Consolas, monospace; }
-  .wafer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-  .wafer { background: rgba(9, 16, 28, .8); border: 1px solid var(--border); border-radius: 10px; padding: 8px; text-align: center; }
-  .wafer canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 6px; }
-  .wafer .cls { font-size: 11.5px; margin-top: 6px; color: var(--text); }
-  .wafer .den { font-size: 10.5px; color: var(--muted); }
+  .muted { color: var(--muted); }
   .quality-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 16px; font-size: 12px; }
+  .quality-list.compact { grid-template-columns: 1fr; }
   .quality-list div { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px dashed rgba(32, 48, 74, .6); }
   .quality-list span:first-child { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .value-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
-  .value-box .item { background: rgba(9, 16, 28, .65); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
-  .value-box .item .k { color: var(--muted); font-size: 11.5px; }
-  .value-box .item .v { font-size: 20px; font-weight: 600; margin-top: 6px; }
-  .note { color: var(--muted); font-size: 11.5px; line-height: 1.6; margin-top: 10px; }
+  .note { color: var(--muted); font-size: 11.5px; line-height: 1.65; margin-top: 10px; }
+  .callout {
+    display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    background: linear-gradient(100deg, rgba(56, 189, 248, .12), rgba(34, 197, 94, .08));
+    border: 1px solid rgba(56, 189, 248, .35); border-radius: 14px; padding: 16px 18px;
+  }
+  .callout .txt { font-size: 13px; line-height: 1.7; }
+  .callout .txt b { color: #7dd3fc; }
+  .btn {
+    background: rgba(56, 189, 248, .16); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, .45);
+    border-radius: 9px; padding: 9px 14px; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .btn:hover { background: rgba(56, 189, 248, .26); }
+
+  /* ---- scenario verification ---- */
+  .scenario { border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; background: var(--card); margin-bottom: 14px; }
+  .scenario .head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .scenario .head h3 { margin: 0; font-size: 15.5px; }
+  .scenario .sub { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+  .chain { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+  .step {
+    position: relative; background: rgba(9, 16, 28, .75); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .step::before { content: ""; position: absolute; left: -9px; top: 50%; width: 10px; height: 2px; background: var(--border); }
+  .step:first-child::before { display: none; }
+  .step .k { color: var(--muted); font-size: 11px; }
+  .step .t { font-size: 14px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .step .d { color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .step.cause { border-color: rgba(245, 158, 11, .5); }
+  .step.cause .t { color: #fcd34d; }
+  .step.alert { border-color: rgba(239, 68, 68, .55); }
+  .step.alert .t { color: #fca5a5; }
+  .step.effect .t { color: #7dd3fc; }
+  .checkrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+  .checkrow span { border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; }
+  .checkrow span.ok { color: #86efac; border-color: rgba(34, 197, 94, .35); }
+
+  /* ---- agent roadmap / roles ---- */
+  .levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .level { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: rgba(9, 16, 28, .6); }
+  .level.live { border-color: rgba(34, 197, 94, .45); }
+  .level.next { border-color: rgba(245, 158, 11, .45); }
+  .level.vision { border-color: rgba(56, 189, 248, .35); border-style: dashed; }
+  .level .lv { font-size: 12px; color: var(--muted); letter-spacing: .5px; }
+  .level h4 { margin: 6px 0 8px; font-size: 15px; }
+  .level ul { margin: 0; padding-left: 16px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .level .state { margin-top: 10px; }
+  .roles-table td:first-child { font-weight: 600; }
   footer { margin-top: 22px; color: #64748b; font-size: 11.5px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  @media (max-width: 1100px) {
+  @media (max-width: 1180px) {
     .kpis { grid-template-columns: repeat(3, 1fr); }
     .span3, .span4, .span5, .span6, .span7, .span8, .span9 { grid-column: span 12; }
     .quality-list { grid-template-columns: 1fr; }
-    .wafer-grid { grid-template-columns: repeat(3, 1fr); }
+    .levels { grid-template-columns: repeat(2, 1fr); }
+    .chain { grid-template-columns: 1fr; }
+    .step::before { display: none; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="banner">
+    <div class="tag">合成数据</div>
+    <div class="body">
+      <b>本看板 100% 为合成数据，不是真实产线数据。</b>
+      <span id="bannerReason"></span><br />
+      <span class="swap">替换路径：真实 MES/EAP 导出按 <code>docs/mes_schema.md</code> 的列契约落地后，把 <code>mes.source</code> 改为 <code>export</code> 即可，DWD/SPC/看板逻辑不变。</span>
+    </div>
+  </div>
+
   <header class="top">
     <div class="title">
       <h1>Wafer <span>Yield</span> Intelligence</h1>
@@ -115,92 +198,160 @@
     <div class="badges" id="badges"></div>
   </header>
 
-  <section class="kpis" id="kpis"></section>
+  <nav class="tabs" id="tabs">
+    <button data-view="overview" class="active">① 总览</button>
+    <button data-view="drill">② 下钻</button>
+    <button data-view="alerts">③ 预警与因果链</button>
+    <button data-view="agent">④ Agent 路线与角色</button>
+    <button data-view="appendix">⑤ 技术附录（SECOM）</button>
+  </nav>
 
-  <section class="grid">
-    <article class="card span8">
-      <h2><span class="dot"></span>良率趋势与风险预警</h2>
-      <p class="hint">左轴为实际日良率，右轴为测试期模型平均失效概率；仅样本外（valid/test）日期有风险值。</p>
-      <div id="trend" class="chart"></div>
-    </article>
+  <!-- ============================ overview ============================ -->
+  <section class="view active" id="view-overview">
+    <section class="kpis" id="kpis"></section>
+    <div class="grid">
+      <article class="card span8">
+        <h2><span class="dot"></span>三线日良率趋势（近 30 天）</h2>
+        <p class="hint">良率 = 末道工序产出 / 首道工序投入。虚线为目标良率；两条异常线分别对应第 ③ 屏的 S1/S2 注入剧本。</p>
+        <div id="lineTrend" class="chart"></div>
+      </article>
+      <article class="card span4">
+        <h2><span class="dot"></span>线体当前状态</h2>
+        <p class="hint">点击行可跳到「下钻」并自动选中该线。</p>
+        <div class="table-scroll" id="lineTable"></div>
+      </article>
+      <article class="card span7">
+        <h2><span class="dot"></span>近 7 天损失构成（工序 × 缺陷代码）</h2>
+        <p class="hint">按不良数量排序，定位良率损失集中在哪道工序。</p>
+        <div id="lossPareto" class="chart short"></div>
+      </article>
+      <article class="card span5">
+        <h2><span class="dot"></span>数据质量门禁</h2>
+        <p class="hint" id="qualityHint"></p>
+        <div class="table-scroll"><div class="quality-list compact" id="qualityList"></div></div>
+      </article>
+      <article class="card span12">
+        <div class="callout">
+          <div class="txt" id="storyCallout"></div>
+          <button class="btn" id="gotoAlerts">看这条因果链 →</button>
+        </div>
+      </article>
+    </div>
+  </section>
 
-    <article class="card span4">
-      <h2><span class="dot"></span>测试期风险分布</h2>
-      <p class="hint">按预测失效概率分箱的晶圆数量，验证模型是否把风险拉開层次。</p>
-      <div id="riskHist" class="chart"></div>
-    </article>
+  <!-- ============================ drill ============================ -->
+  <section class="view" id="view-drill">
+    <div class="toolbar">
+      <label>线体 <select id="fLine"></select></label>
+      <label>工序 <select id="fProcess"></select></label>
+      <label>班次 <select id="fShift"></select></label>
+      <label>起 <input type="date" id="fStart" /></label>
+      <label>止 <input type="date" id="fEnd" /></label>
+      <span class="muted" id="drillMeta" style="font-size:12px"></span>
+    </div>
+    <div class="grid">
+      <article class="card span7">
+        <h2><span class="dot"></span>设备 × 班次 异常缺口</h2>
+        <p class="hint">按「相对同工序中位良率的缺口」排序，避开 TEST 这类结构性低良率工序，直接定位异常设备与班次。</p>
+        <div class="table-scroll" id="worstTable"></div>
+      </article>
+      <article class="card span5">
+        <h2><span class="dot"></span>产品良率</h2>
+        <p class="hint">筛选窗口内按产品汇总，回答「是全线问题还是某个产品」。 </p>
+        <div id="productChart" class="chart short"></div>
+      </article>
+      <article class="card span12">
+        <h2><span class="dot"></span>工序 × 班次 良率热力图</h2>
+        <p class="hint">颜色越深良率越低；用来确认异常是集中在某工序，还是全工序同步下降（后者通常是来料/设计问题）。</p>
+        <div id="shiftHeatmap" class="chart short"></div>
+      </article>
+      <article class="card span12">
+        <h2><span class="dot"></span>日不良率趋势（当前筛选）</h2>
+        <p class="hint">不良率 = 不良数 / 投入数；用于判断异常是突发还是缓慢漂移。</p>
+        <div id="dailyDefect" class="chart short"></div>
+      </article>
+    </div>
+  </section>
 
-    <article class="card span7">
-      <h2><span class="dot"></span>高风险晶圆预警</h2>
-      <p class="hint">测试期预测概率最高的晶圆；点击任意行查看该片的 TreeSHAP 归因。</p>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>晶圆</th><th>日期</th><th>预测失效概率</th><th>风险</th><th>主驱动参数</th><th>真实标签</th></tr></thead>
-          <tbody id="alarmBody"></tbody>
-        </table>
-      </div>
+  <!-- ============================ alerts ============================ -->
+  <section class="view" id="view-alerts">
+    <div class="toolbar">
+      <span class="muted" style="font-size:12.5px">规则：R1_3SIGMA = 连续 3 点 |z| ≥ 3；R2_SEVEN_POINT = 连续 7 点同侧且均值偏移 ≥ 2σ。基线冻结在前 60 天小时均值。</span>
+    </div>
+    <div id="scenarioCards"></div>
+    <div class="grid" id="spcGrid"></div>
+    <article class="card span12" style="margin-top:14px">
+      <h2><span class="dot"></span>告警队列与建议动作</h2>
+      <p class="hint">每条告警都带归属场景（scenario_id）；空值表示未追溯到注入剧本，质量门禁会标 warn。</p>
+      <div class="table-scroll" id="alertTable"></div>
     </article>
+    <article class="card span12" style="margin-top:14px">
+      <h2><span class="dot"></span>可疑批次（告警前 8 小时回溯）</h2>
+      <p class="hint">按设备 + 工序回溯窗口内的批次，按不良数排序；这是给工艺/设备工程师的复判清单。</p>
+      <div class="table-scroll" id="suspectTable"></div>
+    </article>
+  </section>
 
-    <article class="card span5">
-      <h2><span class="dot"></span>单晶圆归因（TreeSHAP）</h2>
-      <div class="toolbar"><select id="waferSelect"></select><span class="hint" id="waferMeta" style="margin:0"></span></div>
-      <div id="attribution" class="chart short"></div>
-      <p class="hint">贡献单位为 log-odds：正值推向失效，负值拉回合格。</p>
-    </article>
+  <!-- ============================ agent ============================ -->
+  <section class="view" id="view-agent">
+    <div class="card span12" style="margin-bottom:14px">
+      <h2><span class="dot"></span>Agent 演进路线：L0 → L3</h2>
+      <p class="hint">当前交付只做到 L2 的规则版建议，<b>未接入真实 LLM</b>，也不做自动执行；L3 是愿景，不是已实现能力。</p>
+      <div class="levels" id="levels"></div>
+    </div>
+    <div class="grid">
+      <article class="card span5">
+        <h2><span class="dot"></span>护栏（为什么现在不放开自动执行）</h2>
+        <ul class="note" style="padding-left:18px;margin-top:4px">
+          <li>只读：Agent 不写 MES/EAP，不下发配方，不调机台参数。</li>
+          <li>可解释：每条建议必须挂到一条告警 + 一个参数 + 一个回溯窗口。</li>
+          <li>可回滚：建议以工单形式给到人，人确认后才执行。</li>
+          <li>可评估：建议采纳率、复判命中率、误报率持续回写。</li>
+          <li>数据合规：真实数据不出厂，模型与日志留在内网。</li>
+        </ul>
+      </article>
+      <article class="card span7">
+        <h2><span class="dot"></span>角色视图：谁看哪一屏、能做什么决定</h2>
+        <p class="hint">同一套数据，按角色收窄到「他需要做的那一个决定」。</p>
+        <div class="table-scroll" id="roleTable"></div>
+      </article>
+    </div>
+  </section>
 
-    <article class="card span8">
-      <h2><span class="dot"></span>关键参数漂移（3σ 控制线）</h2>
-      <div class="toolbar"><select id="sensorSelect"></select><span class="hint" style="margin:0">日均值相对训练基线标准化</span></div>
-      <div id="drift" class="chart"></div>
-    </article>
-
-    <article class="card span4">
-      <h2><span class="dot"></span>缺陷类型分布</h2>
-      <p class="hint">WM-811K 9 类缺陷图谱（对数刻度，none 占绝大多数）。</p>
-      <div id="defectDist" class="chart"></div>
-    </article>
-
-    <article class="card span7">
-      <h2><span class="dot"></span>代表性晶圆图</h2>
-      <p class="hint">每类一张真实晶圆图（绿=合格 die，红=失效 die，深色=无 die）。</p>
-      <div class="wafer-grid" id="waferGrid"></div>
-    </article>
-
-    <article class="card span5">
-      <h2><span class="dot"></span>缺陷分类混淆矩阵</h2>
-      <p class="hint">行=真实类别，列=预测类别；颜色为 log10(样本数+1)。</p>
-      <div id="confusion" class="chart short"></div>
-    </article>
-
-    <article class="card span5">
-      <h2><span class="dot"></span>良率模型特征重要性</h2>
-      <p class="hint">LightGBM gain 占比前 10（测试期平均绝对归因见 tooltip）。</p>
-      <div id="importance" class="chart short"></div>
-    </article>
-
-    <article class="card span7">
-      <h2><span class="dot"></span>模型对比与 ROC</h2>
-      <p class="hint">阈值在验证期按 5% 误报预算选定，随后冻结用于测试期。</p>
-      <div id="roc" class="chart short"></div>
-      <div id="modelTable" style="margin-top:6px"></div>
-    </article>
-
-    <article class="card span12">
-      <h2><span class="dot"></span>数据质量门禁</h2>
-      <p class="hint" id="qualityHint"></p>
-      <div class="quality-list" id="qualityList"></div>
-    </article>
-
-    <article class="card span12">
-      <h2><span class="dot"></span>业务价值测算（情景假设）</h2>
-      <div class="value-box" id="valueBox"></div>
-      <p class="note" id="valueNote"></p>
-    </article>
+  <!-- ============================ appendix ============================ -->
+  <section class="view" id="view-appendix">
+    <section class="kpis" id="apxKpis"></section>
+    <div class="grid">
+      <article class="card span6">
+        <h2><span class="dot"></span>SECOM 良率模型 ROC（时间外推）</h2>
+        <p class="hint">阈值在验证期按 5% 误报预算选定后冻结；测试期样本仅 235 片、9 片失效，置信区间很宽。</p>
+        <div id="apxRoc" class="chart short"></div>
+      </article>
+      <article class="card span6">
+        <h2><span class="dot"></span>特征重要性（LightGBM gain）</h2>
+        <p class="hint">Top 10 传感器；用于说明模型在看什么，而不是声称物理因果。</p>
+        <div id="apxImportance" class="chart short"></div>
+      </article>
+      <article class="card span7">
+        <h2><span class="dot"></span>模型对比（测试期）</h2>
+        <div id="apxModels"></div>
+      </article>
+      <article class="card span5">
+        <h2><span class="dot"></span>缺陷分类（WM-811K 派生特征，9 类）</h2>
+        <div id="apxDefect"></div>
+        <p class="note">测试集 <span class="mono">none</span> 占 93.3%，Accuracy 无参考价值，应看 Macro-F1 / Balanced Accuracy。</p>
+      </article>
+      <article class="card span12">
+        <h2><span class="dot"></span>数据质量门禁明细</h2>
+        <p class="hint" id="apxQualityHint"></p>
+        <div class="table-scroll"><div class="quality-list" id="apxQualityList"></div></div>
+      </article>
+    </div>
   </section>
 
   <footer>
     <span id="footerLeft"></span>
-    <span>数据来源：UCI SECOM（CC BY 4.0）· WM-811K（CC0，经公开镜像派生的 26 维特征子集）</span>
+    <span>主演示：合成 MES（NDA 替代方案）· 附录：UCI SECOM（CC BY 4.0）/ WM-811K（CC0）</span>
   </footer>
 </div>
 
@@ -208,13 +359,15 @@
 <script>
 const DATA = __DASHBOARD_DATA__;
 const C = { accent: '#38bdf8', green: '#22c55e', amber: '#f59e0b', red: '#ef4444', muted: '#8fa3bf', grid: 'rgba(48, 66, 94, .45)' };
-const fmtPct = (v, digits = 1) => (v === null || v === undefined || Number.isNaN(v)) ? '—' : (v * 100).toFixed(digits) + '%';
-const fmtNum = (v, digits = 3) => (v === null || v === undefined || Number.isNaN(v)) ? '—' : Number(v).toFixed(digits);
-const shortDate = (d) => (d || '').slice(5);
+const charts = {};
 
-function baseGrid() {
-  return { left: 48, right: 24, top: 28, bottom: 34 };
-}
+const num = (v, d = 1) => (v === null || v === undefined || Number.isNaN(Number(v))) ? '—' : Number(v).toFixed(d);
+const pct = (v, d = 2) => (v === null || v === undefined || Number.isNaN(Number(v))) ? '—' : (Number(v) * 100).toFixed(d) + '%';
+const signed = (v, d = 2) => (v === null || v === undefined) ? '—' : (Number(v) > 0 ? '+' : '') + Number(v).toFixed(d);
+const shortDate = (d) => String(d || '').slice(5);
+const hourLabel = (h) => String(h || '').replace('T', ' ').slice(0, 16);
+
+function baseGrid() { return { left: 52, right: 24, top: 34, bottom: 34 }; }
 function axisStyle() {
   return {
     axisLine: { lineStyle: { color: '#2a3b56' } },
@@ -222,29 +375,49 @@ function axisStyle() {
     splitLine: { lineStyle: { color: C.grid } }
   };
 }
-
-function renderHeader() {
-  document.getElementById('subtitle').textContent = DATA.meta.subtitle;
-  const badges = [
-    `生成时间 <b>${DATA.meta.generated_at}</b>`,
-    `样本 <b>${DATA.metrics.dataset.wafers}</b> 片晶圆`,
-    `特征 <b>${DATA.metrics.dataset.features}</b> 维`,
-    `失效占比 <b>${(DATA.metrics.dataset.fail_rate * 100).toFixed(2)}%</b>`,
-    `质量门禁 <b>${DATA.kpi.quality_status.toUpperCase()}</b>`
-  ];
-  document.getElementById('badges').innerHTML = badges.map(b => `<span class="badge">${b}</span>`).join('');
-  document.getElementById('footerLeft').textContent = `模型：${DATA.metrics.selected_model}（良率）+ LightGBM 多分类（缺陷） · 时间切分 ${DATA.metrics.split.train}/${DATA.metrics.split.valid}/${DATA.metrics.split.test}`;
+function tooltipStyle() {
+  return { backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' } };
+}
+function draw(id, option) {
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') return null;
+  const existing = echarts.getInstanceByDom(el);
+  if (existing) existing.dispose();
+  const chart = echarts.init(el);
+  chart.setOption(option);
+  charts[id] = chart;
+  return chart;
 }
 
-function renderKpis() {
-  const k = DATA.kpi;
+function renderBanner() {
+  const meta = DATA.meta;
+  document.getElementById('bannerReason').textContent =
+    '原因：真实产线数据受保密协议（NDA）限制，无法带出或公开；本演示用固定随机种子生成同构数据，指标可复现，但数值不代表任何真实工厂。';
+  document.getElementById('subtitle').textContent = meta.subtitle;
+  const badges = [
+    `看板快照 <b>${meta.as_of}</b>`,
+    `数据至 <b>${meta.data_end || meta.as_of}</b>`,
+    `规模 <b>${Number(meta.lots).toLocaleString()}</b> 批 / <b>${Number(meta.rows).toLocaleString()}</b> 行`,
+    `种子 <b>${meta.seed}</b>`,
+    `目标良率 <b>${num(meta.target_yield * 100, 1)}%</b>`,
+    `生成时间 <b>${meta.generated_at}</b>`
+  ];
+  document.getElementById('badges').innerHTML = badges.map(b => `<span class="badge">${b}</span>`).join('');
+  document.getElementById('footerLeft').textContent =
+    `${meta.title} · ${meta.data_mode === 'synthetic' ? '合成数据' : meta.data_mode} · 全部指标由 python -m src.cli all 真实跑出`;
+}
+
+/* ------------------------------- overview ------------------------------- */
+function renderOverview() {
+  const k = DATA.overview.kpis;
+  const gap = k.yield_pct - k.yield_target_pct;
   const cards = [
-    { label: '测试期 AUC', value: fmtNum(k.test_auc, 3), sub: `95% CI ${fmtNum(k.test_auc_ci_low, 3)}–${fmtNum(k.test_auc_ci_high, 3)} · 回测 ${fmtNum(k.backtest_auc_mean, 2)}±${fmtNum(k.backtest_auc_std, 2)}`, cls: 'good' },
-    { label: '测试期 PR-AUC', value: fmtNum(k.test_pr_auc, 3), sub: `随机基线约 ${(DATA.metrics.dataset.fail_rate).toFixed(3)}`, cls: 'good' },
-    { label: 'Recall @ 5% FPR', value: fmtPct(k.test_recall), sub: `阈值冻结于 OOF 5% 误报预算`, cls: 'good' },
-    { label: '测试期预警', value: `${k.test_alerts}`, sub: `覆盖 ${k.test_fails} 个真实失效 / ${k.test_n} 片`, cls: 'warn' },
-    { label: '缺陷分类 Macro-F1', value: fmtNum(k.defect_macro_f1, 3), sub: `Accuracy ${fmtPct(k.defect_accuracy)}`, cls: 'warn' },
-    { label: '数据质量', value: k.quality_status.toUpperCase(), sub: `${k.quality_checks} 项检查`, cls: k.quality_status === 'pass' ? 'good' : 'warn' }
+    { label: '全线日良率', value: `${num(k.yield_pct, 2)}%`, sub: `目标 ${num(k.yield_target_pct, 2)}% · 缺口 ${signed(gap, 2)}pp`, cls: gap >= 0 ? 'good' : 'warn' },
+    { label: '较前 7 日均值', value: `${signed(k.delta_7d_pp, 2)}pp`, sub: '今日 vs 前 7 日（同口径）', cls: k.delta_7d_pp >= 0 ? 'good' : 'bad' },
+    { label: '近 7 日 SPC 预警', value: `${k.alert_cnt_7d}`, sub: 'R1 3σ / R2 连续 7 点', cls: k.alert_cnt_7d > 0 ? 'warn' : 'good' },
+    { label: '可疑批次', value: `${k.suspect_lot_cnt}`, sub: '告警前 8h 回溯，去重批次', cls: k.suspect_lot_cnt > 0 ? 'warn' : 'good' },
+    { label: '当日投入', value: Number(k.input_qty).toLocaleString(), sub: `${k.line_cnt} 条线 × 6 道工序`, cls: '' },
+    { label: '数据质量门禁', value: String(DATA.overview.quality.status).toUpperCase(), sub: `${DATA.overview.quality.pass} pass / ${DATA.overview.quality.warn} warn / ${DATA.overview.quality.fail} fail`, cls: DATA.overview.quality.fail > 0 ? 'bad' : 'good' }
   ];
   document.getElementById('kpis').innerHTML = cards.map(c => `
     <div class="kpi ${c.cls}">
@@ -252,306 +425,556 @@ function renderKpis() {
       <div class="value">${c.value}</div>
       <div class="sub">${c.sub}</div>
     </div>`).join('');
+
+  drawLineTrend();
+  renderLineTable();
+  renderLossPareto();
+  renderQuality();
+  renderStory();
 }
 
-function renderTrend() {
-  const chart = echarts.init(document.getElementById('trend'));
-  const dates = DATA.trend.map(d => shortDate(d.date));
-  chart.setOption({
+function drawLineTrend() {
+  const lines = DATA.overview.lines;
+  const dates = lines.length ? lines[0].series.map(p => p[0]) : [];
+  const palette = [C.accent, C.green, C.amber, '#a78bfa'];
+  draw('lineTrend', {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' } },
-    legend: { data: ['实际良率', '预测风险均值'], textStyle: { color: C.muted }, top: 0 },
-    grid: { ...baseGrid(), top: 36 },
-    xAxis: { type: 'category', data: dates, ...axisStyle() },
-    yAxis: [
-      { type: 'value', name: '良率 %', min: 70, max: 100, ...axisStyle(), nameTextStyle: { color: C.muted } },
-      { type: 'value', name: '风险 %', min: 0, max: Math.max(60, ...DATA.trend.map(d => d.risk_pct || 0)) || 60, ...axisStyle(), nameTextStyle: { color: C.muted } }
-    ],
-    series: [
-      { name: '实际良率', type: 'line', data: DATA.trend.map(d => d.yield_pct), smooth: true, symbol: 'none',
-        lineStyle: { color: C.green, width: 2 }, areaStyle: { color: 'rgba(34,197,94,.10)' } },
-      { name: '预测风险均值', type: 'line', yAxisIndex: 1, data: DATA.trend.map(d => d.risk_pct), smooth: true, symbol: 'circle', symbolSize: 4,
-        connectNulls: false, lineStyle: { color: C.amber, width: 2 }, itemStyle: { color: C.amber } }
-    ]
+    tooltip: { trigger: 'axis', ...tooltipStyle(), valueFormatter: (v) => num(v, 2) + '%' },
+    legend: { data: lines.map(l => l.name), textStyle: { color: C.muted }, top: 0 },
+    grid: { ...baseGrid(), top: 40 },
+    xAxis: { type: 'category', data: dates.map(shortDate), ...axisStyle() },
+    yAxis: { type: 'value', name: '良率 %', scale: true, ...axisStyle(), nameTextStyle: { color: C.muted } },
+    series: lines.map((line, i) => ({
+      name: line.name,
+      type: 'line',
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { width: 2, color: palette[i % palette.length] },
+      itemStyle: { color: palette[i % palette.length] },
+      data: line.series.map(p => p[1]),
+      markLine: i === 0 ? {
+        silent: true,
+        symbol: 'none',
+        label: { formatter: '目标 ' + num(DATA.meta.target_yield * 100, 1) + '%', color: C.muted, fontSize: 10 },
+        lineStyle: { color: C.muted, type: 'dashed' },
+        data: [{ yAxis: DATA.meta.target_yield * 100 }]
+      } : undefined
+    }))
   });
-  window.addEventListener('resize', () => chart.resize());
 }
 
-function renderRiskHist() {
-  const chart = echarts.init(document.getElementById('riskHist'));
-  chart.setOption({
-    backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' } },
-    grid: { ...baseGrid(), top: 16 },
-    xAxis: { type: 'category', data: DATA.risk_hist.map(d => d.bin), ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10, rotate: 30 } },
-    yAxis: { type: 'value', ...axisStyle() },
-    series: [{
-      type: 'bar', data: DATA.risk_hist.map(d => d.count), barWidth: '62%',
-      itemStyle: { borderRadius: [4, 4, 0, 0], color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-        { offset: 0, color: '#38bdf8' }, { offset: 1, color: 'rgba(56,189,248,.15)' }
-      ]) }
-    }]
-  });
-  window.addEventListener('resize', () => chart.resize());
-}
-
-function renderAlarms() {
-  const body = document.getElementById('alarmBody');
-  body.innerHTML = DATA.alarms.map((a, i) => `
-    <tr data-index="${i}">
-      <td class="mono">${a.wafer_id}</td>
-      <td>${a.stat_date}</td>
-      <td class="mono">${fmtPct(a.probability)}</td>
-      <td><span class="pill ${a.risk_band}">${a.risk_band}</span></td>
-      <td class="mono">${a.top_driver || '—'} <span style="color:${a.contribution >= 0 ? C.red : C.green}">${a.contribution > 0 ? '+' : ''}${fmtNum(a.contribution, 2)}</span></td>
-      <td><span class="pill ${a.actual === 'fail' ? 'fail' : 'pass'}">${a.actual}</span></td>
+function renderLineTable() {
+  const body = DATA.overview.lines.map(line => `
+    <tr class="clickable" data-line="${line.code}">
+      <td class="mono">${line.code}</td>
+      <td>${line.name}</td>
+      <td class="mono">${num(line.yield_pct, 2)}%</td>
+      <td class="mono muted">${num(line.yield_7d_pct, 2)}%</td>
+      <td class="mono" style="color:${line.delta_pp < 0 ? C.red : C.green}">${signed(line.delta_pp, 2)}</td>
+      <td class="mono">${line.alert_cnt}</td>
+      <td><span class="pill ${line.status}">${line.status}</span></td>
     </tr>`).join('');
-  body.querySelectorAll('tr').forEach(row => {
+  document.getElementById('lineTable').innerHTML = `
+    <table>
+      <thead><tr><th>线体</th><th>名称</th><th>日良率</th><th>7 日均</th><th>Δpp</th><th>预警</th><th>状态</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table>`;
+  document.querySelectorAll('#lineTable tr[data-line]').forEach(row => {
     row.addEventListener('click', () => {
-      const index = Number(row.dataset.index);
-      const waferId = DATA.alarms[index]?.wafer_id;
-      const select = document.getElementById('waferSelect');
-      const option = [...select.options].find(o => o.value === waferId);
-      if (option) { select.value = waferId; renderAttribution(); }
+      document.getElementById('fLine').value = row.dataset.line;
+      activate('drill');
+      renderDrill();
     });
   });
 }
 
-function renderAttribution() {
-  const select = document.getElementById('waferSelect');
-  const item = DATA.attributions.find(a => a.wafer_id === select.value) || DATA.attributions[0];
-  document.getElementById('waferMeta').textContent =
-    `${item.stat_date} · 预测 ${fmtPct(item.probability)} · 真实 ${item.is_fail ? '失效' : '合格'}`;
-  const drivers = [...item.drivers].reverse();
-  const el = document.getElementById('attribution');
-  const existing = echarts.getInstanceByDom(el);
-  if (existing) existing.dispose();
-  const chart = echarts.init(el);
-  chart.setOption({
+function renderLossPareto() {
+  const rows = [...DATA.overview.top_loss].reverse();
+  draw('lossPareto', {
     backgroundColor: 'transparent',
     tooltip: {
-      trigger: 'axis', backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' },
-      formatter: (params) => {
-        const p = params[0];
-        const driver = item.drivers.find(d => d.feature === p.name);
-        return `${p.name}<br/>贡献 ${p.value > 0 ? '+' : ''}${p.value.toFixed(3)}<br/>取值 ${driver ? driver.value : '—'}`;
-      }
-    },
-    grid: { left: 110, right: 30, top: 12, bottom: 26 },
-    xAxis: { type: 'value', ...axisStyle() },
-    yAxis: { type: 'category', data: drivers.map(d => d.feature), ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10.5 } },
-    series: [{
-      type: 'bar', data: drivers.map(d => ({
-        value: d.contribution,
-        itemStyle: { color: d.contribution >= 0 ? C.red : C.green, borderRadius: 3 }
-      })), barWidth: '58%'
-    }]
-  });
-  chart.resize();
-}
-
-function renderDrift() {
-  const select = document.getElementById('sensorSelect');
-  const render = () => {
-    const item = DATA.drift.find(d => d.sensor === select.value) || DATA.drift[0];
-    if (!item) return;
-    const el = document.getElementById('drift');
-    const existing = echarts.getInstanceByDom(el);
-    if (existing) existing.dispose();
-    const chart = echarts.init(el);
-    const dates = item.series.map(p => shortDate(p[0]));
-    chart.setOption({
-      backgroundColor: 'transparent',
-      tooltip: { trigger: 'axis', backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' } },
-      grid: { left: 46, right: 24, top: 24, bottom: 34 },
-      xAxis: { type: 'category', data: dates, ...axisStyle() },
-      yAxis: { type: 'value', name: 'z', ...axisStyle(), nameTextStyle: { color: C.muted } },
-      series: [{
-        type: 'line', data: item.series.map(p => p[1]), smooth: true, symbol: 'circle', symbolSize: 3,
-        lineStyle: { color: C.accent, width: 2 }, itemStyle: { color: C.accent },
-        markLine: {
-          silent: true, symbol: 'none',
-          label: { color: C.muted, fontSize: 10 },
-          data: [
-            { yAxis: 3, lineStyle: { color: C.red, type: 'dashed' }, label: { formatter: '+3σ' } },
-            { yAxis: -3, lineStyle: { color: C.red, type: 'dashed' }, label: { formatter: '-3σ' } },
-            { yAxis: 0, lineStyle: { color: C.grid } }
-          ]
-        }
-      }]
-    });
-    chart.resize();
-  };
-  select.innerHTML = DATA.drift.map(d => `<option value="${d.sensor}">${d.sensor}</option>`).join('');
-  select.onchange = render;
-  render();
-}
-
-function renderDefectDist() {
-  const chart = echarts.init(document.getElementById('defectDist'));
-  const rows = [...DATA.defect_dist].reverse();
-  chart.setOption({
-    backgroundColor: 'transparent',
-    tooltip: {
-      trigger: 'axis', backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' },
-      formatter: (params) => {
-        const row = rows[params[0].dataIndex];
-        return `${row.label}<br/>样本 ${row.count.toLocaleString()}<br/>占比 ${(row.share * 100).toFixed(2)}%`;
-      }
-    },
-    grid: { left: 78, right: 40, top: 10, bottom: 26 },
-    xAxis: { type: 'log', ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10 } },
-    yAxis: { type: 'category', data: rows.map(r => r.label), ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10.5 } },
-    series: [{
-      type: 'bar', data: rows.map(r => r.count), barWidth: '60%',
-      itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: 'rgba(56,189,248,.35)' }, { offset: 1, color: '#38bdf8' }
-      ]), borderRadius: [0, 4, 4, 0] }
-    }]
-  });
-  window.addEventListener('resize', () => chart.resize());
-}
-
-function renderMaps() {
-  const grid = document.getElementById('waferGrid');
-  grid.innerHTML = DATA.maps.map((m, i) => `
-    <div class="wafer">
-      <canvas id="map${i}" width="${m.cols}" height="${m.rows}"></canvas>
-      <div class="cls">${m.class}</div>
-      <div class="den">${m.rows}×${m.cols} · 缺陷密度 ${(m.density * 100).toFixed(1)}%</div>
-    </div>`).join('');
-  DATA.maps.forEach((m, i) => {
-    const canvas = document.getElementById(`map${i}`);
-    const ctx = canvas.getContext('2d');
-    for (let r = 0; r < m.rows; r++) {
-      for (let c = 0; c < m.cols; c++) {
-        const v = m.grid[r][c];
-        ctx.fillStyle = v === 2 ? '#ef4444' : v === 1 ? '#1f8a53' : '#0b1526';
-        ctx.fillRect(c, r, 1, 1);
-      }
-    }
-  });
-}
-
-function renderConfusion() {
-  const chart = echarts.init(document.getElementById('confusion'));
-  const labels = DATA.defect.class_order;
-  const matrix = DATA.defect.confusion_matrix;
-  const points = [];
-  let maxLog = 0;
-  matrix.forEach((row, i) => row.forEach((value, j) => {
-    const v = Math.log10(value + 1);
-    maxLog = Math.max(maxLog, v);
-    points.push([j, i, v, value]);
-  }));
-  chart.setOption({
-    backgroundColor: 'transparent',
-    tooltip: {
-      backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' },
-      formatter: (p) => `真实 ${labels[p.value[1]]} → 预测 ${labels[p.value[0]]}<br/>样本 ${p.value[3].toLocaleString()}`
-    },
-    grid: { left: 86, right: 16, top: 34, bottom: 70 },
-    xAxis: { type: 'category', data: labels, ...axisStyle(), axisLabel: { color: C.muted, fontSize: 9.5, rotate: 40 } },
-    yAxis: { type: 'category', data: labels, ...axisStyle(), axisLabel: { color: C.muted, fontSize: 9.5 } },
-    visualMap: { min: 0, max: maxLog, show: false, inRange: { color: ['#0b1526', '#0e4f6e', '#38bdf8', '#f59e0b'] } },
-    series: [{ type: 'heatmap', data: points, itemStyle: { borderColor: '#0b1528', borderWidth: 1 } }]
-  });
-  window.addEventListener('resize', () => chart.resize());
-}
-
-function renderImportance() {
-  const chart = echarts.init(document.getElementById('importance'));
-  const rows = [...DATA.importance].reverse();
-  chart.setOption({
-    backgroundColor: 'transparent',
-    tooltip: {
-      trigger: 'axis', backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' },
+      trigger: 'axis', ...tooltipStyle(),
       formatter: (p) => {
         const row = rows[p[0].dataIndex];
-        return `${row.feature}<br/>gain 占比 ${(row.gain_share * 100).toFixed(2)}%<br/>平均绝对归因 ${row.effect_mean_abs}`;
+        return `${row.process_code} · ${row.defect_code}<br/>不良 ${Number(row.defect_qty).toLocaleString()}（占比 ${pct(row.share, 1)}）`;
       }
     },
-    grid: { left: 88, right: 40, top: 10, bottom: 26 },
-    xAxis: { type: 'value', axisLabel: { color: C.muted, fontSize: 10, formatter: v => (v * 100).toFixed(0) + '%' }, ...axisStyle() },
-    yAxis: { type: 'category', data: rows.map(r => r.feature), ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10.5 } },
-    series: [{ type: 'bar', data: rows.map(r => r.gain_share), barWidth: '58%', itemStyle: { color: '#38bdf8', borderRadius: [0, 4, 4, 0] } }]
+    grid: { left: 132, right: 56, top: 12, bottom: 26 },
+    xAxis: { type: 'value', ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10, formatter: v => (v * 100).toFixed(0) + '%' } },
+    yAxis: { type: 'category', data: rows.map(r => `${r.process_code}·${r.defect_code}`), ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10.5 } },
+    series: [{
+      type: 'bar',
+      data: rows.map(r => r.share),
+      barWidth: '62%',
+      itemStyle: { color: C.accent, borderRadius: [0, 4, 4, 0] },
+      label: { show: true, position: 'right', color: C.muted, fontSize: 10, formatter: (p) => pct(p.value, 1) }
+    }]
   });
-  window.addEventListener('resize', () => chart.resize());
-}
-
-function renderRoc() {
-  const chart = echarts.init(document.getElementById('roc'));
-  const selected = DATA.metrics.selected_model;
-  const roc = DATA.metrics.curves.roc;
-  chart.setOption({
-    backgroundColor: 'transparent',
-    tooltip: { trigger: 'axis', backgroundColor: '#0d1727', borderColor: '#2a3b56', textStyle: { color: '#e6edf7' } },
-    grid: { left: 48, right: 20, top: 20, bottom: 34 },
-    xAxis: { type: 'value', name: 'FPR', min: 0, max: 1, ...axisStyle(), nameTextStyle: { color: C.muted } },
-    yAxis: { type: 'value', name: 'TPR', min: 0, max: 1, ...axisStyle(), nameTextStyle: { color: C.muted } },
-    series: [
-      { type: 'line', data: roc, smooth: true, symbol: 'none', lineStyle: { color: C.accent, width: 2.5 }, name: selected },
-      { type: 'line', data: [[0, 0], [1, 1]], symbol: 'none', lineStyle: { color: C.muted, type: 'dashed', width: 1 }, name: '随机' }
-    ]
-  });
-  window.addEventListener('resize', () => chart.resize());
-}
-
-function renderModelTable() {
-  const rows = Object.entries(DATA.metrics.models).map(([name, m]) => {
-    const t = m.test;
-    return `<tr><td class="mono">${name}</td><td>${fmtNum(t.auc)}</td><td>${fmtNum(t.pr_auc)}</td><td>${fmtPct(t.recall)}</td><td>${fmtPct(t.precision)}</td><td>${fmtPct(t.fpr)}</td><td>${t.alerts} / ${t.actual_fail}</td></tr>`;
-  }).join('');
-  document.getElementById('modelTable').innerHTML = `
-    <table><thead><tr><th>模型</th><th>AUC</th><th>PR-AUC</th><th>Recall</th><th>Precision</th><th>FPR</th><th>预警 / 实际失效</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderQuality() {
-  const q = DATA.quality;
+  const q = DATA.overview.quality;
   document.getElementById('qualityHint').textContent =
-    `总体状态 ${q.overall_status.toUpperCase()} · 运行 ${q.run_id} · 可用传感器 ${q.summary.usable_sensors} / ${q.summary.sensors}`;
+    `总体 ${String(q.status).toUpperCase()} · ${q.checks} 项检查（含 MES 10 项：行数/数量守恒/口径一致/场景↔告警一致/来源标注）`;
   const order = { fail: 0, warn: 1, pass: 2 };
-  const rows = [...q.checks].sort((a, b) => order[a.status] - order[b.status]);
+  const rows = [...q.rows].sort((a, b) => order[a.status] - order[b.status]);
   document.getElementById('qualityList').innerHTML = rows.map(c => `
-    <div title="${c.details || ''}">
+    <div title="${(c.details || '').replace(/"/g, '&quot;')}">
       <span>${c.check_name}</span>
-      <span><span class="pill ${c.status}">${c.status}</span> <span class="mono" style="color:#8fa3bf">${c.observed}</span></span>
+      <span><span class="pill ${c.status}">${c.status}</span> <span class="mono muted">${c.observed}</span></span>
     </div>`).join('');
 }
 
-function renderBusiness() {
-  const b = DATA.business;
-  const items = [
-    { k: '避免的失效晶圆（测试期）', v: `${b.avoided_escapes} 片` },
-    { k: '额外复判/误报', v: `${b.false_alarms} 片` },
-    { k: '净价值（情景）', v: `¥${Number(b.net_value_cny).toLocaleString()}` }
+function renderStory() {
+  const sc = (DATA.alerts.scenarios || [])[0];
+  const el = document.getElementById('storyCallout');
+  if (!sc) { el.textContent = '未检测到注入剧本。'; return; }
+  const chain = sc.detail.chain;
+  el.innerHTML =
+    `<b>${sc.scenario_id} · ${sc.detail.title}</b>：注入的漂移与看板预警对得上（<span class="pill ${sc.verdict === 'MATCH' ? 'match' : 'mismatch'}">${sc.verdict}</span>）。` +
+    ` ${hourLabel(chain.first_param_breach)} 参数首先越界 → ${hourLabel(chain.first_alert)} 触发 ${sc.detected_rule} → 工序良率 ${signed(sc.step_drop_pp, 2)}pp、最终良率 ${signed(sc.final_drop_pp, 2)}pp。` +
+    ` 整条链可在第 ③ 屏逐点验证。`;
+  document.getElementById('gotoAlerts').addEventListener('click', () => activate('alerts'));
+}
+
+/* -------------------------------- drill -------------------------------- */
+function fillSelect(id, items, allLabel) {
+  const select = document.getElementById(id);
+  select.innerHTML = `<option value="">${allLabel}</option>` +
+    items.map(i => `<option value="${i.code}">${i.code} · ${i.name}</option>`).join('');
+}
+
+function initDrill() {
+  const D = DATA.drill;
+  fillSelect('fLine', D.lines, '全部线体');
+  fillSelect('fProcess', D.processes, '全部工序');
+  fillSelect('fShift', D.shifts, '全部班次');
+  document.getElementById('fStart').value = D.window.start;
+  document.getElementById('fEnd').value = D.window.end;
+  ['fLine', 'fProcess', 'fShift', 'fStart', 'fEnd'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderDrill);
+  });
+}
+
+function filteredSteps() {
+  const line = document.getElementById('fLine').value;
+  const process = document.getElementById('fProcess').value;
+  const shift = document.getElementById('fShift').value;
+  const start = document.getElementById('fStart').value;
+  const end = document.getElementById('fEnd').value;
+  return DATA.drill.step_rows.filter(r =>
+    (!line || r[0] === line) &&
+    (!process || r[1] === process) &&
+    (!shift || r[3] === shift) &&
+    (!start || r[4] >= start) &&
+    (!end || r[4] <= end)
+  );
+}
+
+function groupSum(rows, keyFn) {
+  const map = new Map();
+  rows.forEach(r => {
+    const key = keyFn(r);
+    const item = map.get(key) || { key, input: 0, defect: 0, lots: 0 };
+    item.input += Number(r[6]);
+    item.defect += Number(r[7]);
+    item.lots += Number(r[5]);
+    map.set(key, item);
+  });
+  return [...map.values()].map(item => ({ ...item, yield: item.input ? 1 - item.defect / item.input : null }));
+}
+
+function renderDrill() {
+  const rows = filteredSteps();
+  document.getElementById('drillMeta').textContent =
+    `${rows.length} 条设备×班次×日记录 · 投入 ${rows.reduce((s, r) => s + Number(r[6]), 0).toLocaleString()}`;
+
+  const all = groupSum(rows, r => `${r[0]}|${r[1]}|${r[2]}|${r[3]}`);
+  const median = {};
+  DATA.drill.processes.forEach(p => {
+    const values = all.filter(i => i.key.split('|')[1] === p.code).map(i => i.yield).sort((a, b) => a - b);
+    median[p.code] = values.length ? values[Math.floor(values.length / 2)] : null;
+  });
+  all.forEach(i => {
+    const m = median[i.key.split('|')[1]];
+    i.gap = (m === null || i.yield === null) ? 0 : (i.yield - m) * 100;
+  });
+  const worst = all.sort((a, b) => a.gap - b.gap).slice(0, 18);
+  const body = worst.map(item => {
+    const [line, process, equip, shift] = item.key.split('|');
+    return `<tr>
+      <td class="mono">${line}</td><td class="mono">${process}</td><td class="mono">${equip}</td>
+      <td>${shift}</td><td class="mono">${item.lots}</td>
+      <td class="mono">${item.input.toLocaleString()}</td>
+      <td class="mono" style="color:${C.red}">${item.defect.toLocaleString()}</td>
+      <td class="mono">${num(item.yield * 100, 3)}%</td>
+      <td class="mono" style="color:${item.gap < 0 ? C.red : C.green}">${signed(item.gap, 2)}pp</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('worstTable').innerHTML = `
+    <table>
+      <thead><tr><th>线体</th><th>工序</th><th>设备</th><th>班次</th><th>批数</th><th>投入</th><th>不良</th><th>工序良率</th><th>距中位</th></tr></thead>
+      <tbody>${body || '<tr><td colspan="9" class="muted">当前筛选无数据</td></tr>'}</tbody>
+    </table>`;
+
+  // product yield
+  const line = document.getElementById('fLine').value;
+  const start = document.getElementById('fStart').value;
+  const end = document.getElementById('fEnd').value;
+  const products = new Map();
+  DATA.drill.product_rows.forEach(r => {
+    if (line && r[0] !== line) return;
+    if (start && r[2] < start) return;
+    if (end && r[2] > end) return;
+    const item = products.get(r[1]) || { input: 0, good: 0 };
+    item.input += Number(r[3]);
+    item.good += Number(r[4]);
+    products.set(r[1], item);
+  });
+  const names = [...products.keys()];
+  draw('productChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', ...tooltipStyle(), valueFormatter: (v) => num(v, 2) + '%' },
+    grid: { left: 52, right: 20, top: 16, bottom: 28 },
+    xAxis: { type: 'category', data: names, ...axisStyle() },
+    yAxis: { type: 'value', name: '良率 %', scale: true, ...axisStyle(), nameTextStyle: { color: C.muted } },
+    series: [{
+      type: 'bar',
+      barWidth: '48%',
+      data: names.map(n => {
+        const item = products.get(n);
+        return item.input ? Number((item.good / item.input * 100).toFixed(2)) : null;
+      }),
+      itemStyle: { color: C.green, borderRadius: [4, 4, 0, 0] }
+    }]
+  });
+
+  // heatmap process x shift
+  const heat = new Map();
+  rows.forEach(r => {
+    const key = `${r[1]}|${r[3]}`;
+    const item = heat.get(key) || { input: 0, defect: 0 };
+    item.input += Number(r[6]);
+    item.defect += Number(r[7]);
+    heat.set(key, item);
+  });
+  const processes = DATA.drill.processes.map(p => p.code);
+  const shifts = DATA.drill.shifts.map(s => s.code);
+  const points = [];
+  let min = 100, max = 0;
+  processes.forEach((p, xi) => shifts.forEach((s, yi) => {
+    const item = heat.get(`${p}|${s}`);
+    if (!item || !item.input) return;
+    const y = Number(((1 - item.defect / item.input) * 100).toFixed(2));
+    min = Math.min(min, y); max = Math.max(max, y);
+    points.push([xi, yi, y]);
+  }));
+  draw('shiftHeatmap', {
+    backgroundColor: 'transparent',
+    tooltip: { ...tooltipStyle(), formatter: (p) => `${processes[p.value[0]]} · ${shifts[p.value[1]]}<br/>良率 ${num(p.value[2], 2)}%` },
+    grid: { left: 64, right: 24, top: 20, bottom: 34 },
+    xAxis: { type: 'category', data: processes, ...axisStyle() },
+    yAxis: { type: 'category', data: shifts, ...axisStyle() },
+    visualMap: {
+      min: min === 100 ? 90 : Math.floor(min * 10) / 10,
+      max: max === 0 ? 100 : Math.ceil(max * 10) / 10,
+      show: true, right: 0, bottom: 0, itemWidth: 10, itemHeight: 80,
+      textStyle: { color: C.muted, fontSize: 10 },
+      inRange: { color: ['#ef4444', '#f59e0b', '#22c55e'] }
+    },
+    series: [{ type: 'heatmap', data: points, label: { show: true, fontSize: 10, color: '#0b1526', formatter: (p) => num(p.value[2], 1) } }]
+  });
+
+  // daily defect rate
+  const daily = groupSum(rows, r => r[4]).sort((a, b) => a.key.localeCompare(b.key));
+  draw('dailyDefect', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', ...tooltipStyle(), valueFormatter: (v) => num(v, 2) + '%' },
+    grid: { ...baseGrid(), top: 20 },
+    xAxis: { type: 'category', data: daily.map(d => shortDate(d.key)), ...axisStyle() },
+    yAxis: { type: 'value', name: '不良率 %', scale: true, ...axisStyle(), nameTextStyle: { color: C.muted } },
+    series: [{
+      type: 'line', smooth: true, symbol: 'circle', symbolSize: 3,
+      data: daily.map(d => d.yield === null ? null : Number(((1 - d.yield) * 100).toFixed(2))),
+      lineStyle: { color: C.amber, width: 2 }, itemStyle: { color: C.amber },
+      areaStyle: { color: 'rgba(245,158,11,.10)' }
+    }]
+  });
+}
+
+/* -------------------------------- alerts -------------------------------- */
+function renderScenarios() {
+  const wrap = document.getElementById('scenarioCards');
+  const scenarios = DATA.alerts.scenarios || [];
+  if (!scenarios.length) { wrap.innerHTML = '<div class="card">未检测到注入剧本。</div>'; return; }
+  const alertRows = DATA.alerts.rows || [];
+  wrap.innerHTML = scenarios.map(sc => {
+    const chain = sc.detail.chain;
+    const lag = sc.detail.lag_hours || {};
+    const alert = alertRows.find(a => a.scenario_id === sc.scenario_id && a.rule_code === sc.detected_rule)
+      || alertRows.find(a => a.scenario_id === sc.scenario_id) || {};
+    const checks = sc.detail.checks || {};
+    const steps = [
+      { cls: 'cause', k: '参数开始漂移', t: hourLabel(chain.drift_start), d: `${alert.line_code || ''} · ${alert.process_code || ''} · ${alert.equipment_id || ''}` },
+      { cls: 'effect', k: '工序良率首降', t: hourLabel(chain.first_step_yield_drop), d: `滞后 ${num(lag.drift_to_step_yield_drop, 1)}h · 班次 ${chain.first_shift || '—'}` },
+      { cls: 'alert', k: '看板产生预警', t: hourLabel(chain.first_alert), d: `${sc.detected_rule} · 滞后 ${num(lag.drift_to_alert, 1)}h` },
+      { cls: 'effect', k: '最终良率下降', t: hourLabel(chain.first_final_yield_drop), d: `滞后 ${num(lag.drift_to_final_yield_drop, 1)}h` }
+    ];
+    return `
+    <div class="scenario">
+      <div class="head">
+        <h3>${sc.scenario_id} · ${sc.detail.title}</h3>
+        <span class="pill ${sc.verdict === 'MATCH' ? 'match' : 'mismatch'}">${sc.verdict}</span>
+        <span class="pill ${alert.severity || 'medium'}">${alert.severity || ''}</span>
+        <span class="muted" style="font-size:12px">期望规则 ${sc.expected_rule} · 实检规则 ${sc.detected_rule}</span>
+      </div>
+      <div class="sub">${alert.line_code || ''} / ${alert.process_code || ''} / ${alert.equipment_id || ''} · ${alert.param_name || ''} · 首次异常班次 ${chain.first_shift || '—'} · 注入 ${hourLabel(chain.drift_start)}</div>
+      <div class="chain">${steps.map(s => `
+        <div class="step ${s.cls}">
+          <div class="k">${s.k}</div>
+          <div class="t mono">${s.t}</div>
+          <div class="d">${s.d}</div>
+        </div>`).join('')}</div>
+      <div class="checkrow">
+        <span class="ok">参数越 3σ ${hourLabel(chain.first_param_breach)}（滞后 ${num(lag.drift_to_param_breach, 1)}h）</span>
+        <span class="${checks.alert ? 'ok' : ''}">告警存在 ${checks.alert ? '✓' : '✗'}</span>
+        <span class="${checks.rule ? 'ok' : ''}">规则一致 ${checks.rule ? '✓' : '✗'}</span>
+        <span class="${checks.step_drop ? 'ok' : ''}">工序良率下降 ${signed(sc.step_drop_pp, 2)}pp</span>
+        <span class="${checks.final_drop ? 'ok' : ''}">最终良率下降 ${signed(sc.final_drop_pp, 2)}pp</span>
+        <span class="${checks.directed ? 'ok' : ''}">告警滞后在剧本窗口内</span>
+        <span>检出滞后 ${num(sc.detection_lag_hours, 0)}h</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSpc() {
+  const grid = document.getElementById('spcGrid');
+  const chartsData = DATA.alerts.spc || [];
+  grid.innerHTML = chartsData.map((c, i) => `
+    <article class="card span6">
+      <h2><span class="dot"></span>${c.process_code} · ${c.equipment_id} · ${c.param_name}
+        <span class="pill ${c.rule_code === 'NORMAL' ? 'normal' : 'high'}">${c.rule_code}</span>
+      </h2>
+      <p class="hint">${c.line_code} · 单位 ${c.unit || '—'} · ${c.alert_ts ? '告警 ' + c.alert_ts : '健康参考序列（非告警）'} · 灰虚线为 3σ 控制限</p>
+      <div id="spc${i}" class="chart short"></div>
+    </article>`).join('');
+
+  chartsData.forEach((c, i) => {
+    const hours = c.points.map(p => p[0]);
+    const alertIdx = c.alert_ts ? hours.indexOf(c.alert_ts) : -1;
+    draw(`spc${i}`, {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis', ...tooltipStyle(),
+        formatter: (params) => {
+          const p = c.points[params[0].dataIndex];
+          return `${hourLabel(p[0])}<br/>均值 ${num(p[1], 3)} ${c.unit || ''}<br/>z = ${num(p[2], 2)}<br/>控制限 ${num(p[4], 3)} ~ ${num(p[3], 3)}`;
+        }
+      },
+      grid: { left: 58, right: 30, top: 18, bottom: 28 },
+      xAxis: { type: 'category', data: hours.map(h => hourLabel(h).slice(5)), ...axisStyle(), axisLabel: { color: C.muted, fontSize: 9.5, interval: Math.max(0, Math.floor(hours.length / 8)) } },
+      yAxis: { type: 'value', scale: true, ...axisStyle() },
+      series: [
+        { name: '参数均值', type: 'line', data: c.points.map(p => p[1]), symbol: 'none', smooth: true, lineStyle: { color: C.accent, width: 2 }, itemStyle: { color: C.accent } },
+        { name: 'UCL', type: 'line', data: c.points.map(p => p[3]), symbol: 'none', lineStyle: { color: C.muted, type: 'dashed', width: 1 } },
+        { name: 'LCL', type: 'line', data: c.points.map(p => p[4]), symbol: 'none', lineStyle: { color: C.muted, type: 'dashed', width: 1 } }
+      ],
+      ...(alertIdx >= 0 ? {
+        series: [
+          { name: '参数均值', type: 'line', data: c.points.map(p => p[1]), symbol: 'none', smooth: true, lineStyle: { color: C.accent, width: 2 }, itemStyle: { color: C.accent },
+            markLine: { symbol: 'none', label: { color: '#fca5a5', fontSize: 10, formatter: '告警' }, lineStyle: { color: C.red, type: 'solid', width: 1.5 }, data: [{ xAxis: hours.map(h => hourLabel(h).slice(5))[alertIdx] }] },
+            markPoint: { symbolSize: 0, label: { show: false }, data: [] } },
+          { name: 'UCL', type: 'line', data: c.points.map(p => p[3]), symbol: 'none', lineStyle: { color: C.muted, type: 'dashed', width: 1 } },
+          { name: 'LCL', type: 'line', data: c.points.map(p => p[4]), symbol: 'none', lineStyle: { color: C.muted, type: 'dashed', width: 1 } }
+        ]
+      } : {})
+    });
+  });
+}
+
+function renderAlertTable() {
+  const rows = DATA.alerts.rows || [];
+  const body = rows.map(a => `
+    <tr>
+      <td class="mono">${hourLabel(a.alert_ts)}</td>
+      <td class="mono">${a.line_code}<br/><span class="muted">${a.process_code} / ${a.equipment_id}</span></td>
+      <td>${a.param_name}<br/><span class="muted mono">${a.param_code} (${a.unit})</span></td>
+      <td class="mono">${a.rule_code === 'R1_3SIGMA' ? 'R1 3σ' : 'R2 7 点'}</td>
+      <td><span class="pill ${a.severity}">${a.severity}</span></td>
+      <td class="mono">${num(a.z_score, 2)}</td>
+      <td style="max-width:420px">${a.evidence}<br/><span style="color:#7dd3fc">建议：${a.suggested_action}</span><br/><span class="muted">责任人：${a.owner_role}</span></td>
+      <td class="mono">${a.scenario_id || '<span class="pill warn">未追溯</span>'}</td>
+    </tr>`).join('');
+  document.getElementById('alertTable').innerHTML = `
+    <table>
+      <thead><tr><th>时间</th><th>线体 / 工序 / 设备</th><th>参数</th><th>规则</th><th>级别</th><th>z</th><th>证据与建议</th><th>场景</th></tr></thead>
+      <tbody>${body || '<tr><td colspan="8" class="muted">无告警</td></tr>'}</tbody>
+    </table>`;
+}
+
+function renderSuspects() {
+  const rows = DATA.alerts.suspects || [];
+  const body = rows.map(s => `
+    <tr>
+      <td class="mono">${s.alert_id}</td>
+      <td class="mono">${s.lot_id}</td>
+      <td class="mono">${s.product_code}</td>
+      <td class="mono">${hourLabel(s.process_ts)}</td>
+      <td>${s.shift_code}</td>
+      <td class="mono">${Number(s.input_qty).toLocaleString()}</td>
+      <td class="mono" style="color:${C.red}">${Number(s.defect_qty).toLocaleString()}</td>
+      <td class="mono">${num(s.step_yield * 100, 2)}%</td>
+      <td class="mono">${s.equipment_id}</td>
+    </tr>`).join('');
+  document.getElementById('suspectTable').innerHTML = `
+    <table>
+      <thead><tr><th>告警</th><th>批次</th><th>产品</th><th>工序时间</th><th>班次</th><th>投入</th><th>不良</th><th>工序良率</th><th>设备</th></tr></thead>
+      <tbody>${body || '<tr><td colspan="9" class="muted">无可疑批次</td></tr>'}</tbody>
+    </table>`;
+}
+
+/* --------------------------------- agent --------------------------------- */
+const LEVELS = [
+  {
+    lv: 'L0', title: '报表自动化', cls: 'live', state: '<span class="pill pass">已实现</span>',
+    items: ['日/线/工序良率自动出数', '分层数仓 + 质量门禁', '离线看板，零服务依赖']
+  },
+  {
+    lv: 'L1', title: '规则预警', cls: 'live', state: '<span class="pill pass">已实现</span>',
+    items: ['SPC R1 3σ / R2 连续 7 点', '异常 → 告警 → 可疑批次', '注入剧本与告警一一对应']
+  },
+  {
+    lv: 'L2', title: '归因与建议', cls: 'next', state: '<span class="pill warn">规则版已实现 · LLM 待接入</span>',
+    items: ['参数级证据链 + 建议动作', '按角色路由到责任人', 'LLM 只做措辞与检索，不做判断']
+  },
+  {
+    lv: 'L3', title: '自主闭环', cls: 'vision', state: '<span class="pill">愿景 · 未实现</span>',
+    items: ['建议 → 工单 → 复判 → 回写', '效果评估反哺规则阈值', '人确认后才允许动设备']
+  }
+];
+
+const ROLES = [
+  ['班组长', '总览 + 当班异常', '是否停线待检', '接收告警，组织首件复判'],
+  ['工艺工程师', '工序 × 参数漂移', '调整工艺窗口 / 加严抽检', '确认因果链，提交工艺变更'],
+  ['设备工程师', '设备 × 班次良率', '是否停机保养 / 换件', '按设备聚合的复判清单'],
+  ['质量经理', '损失构成 + 质量门禁', '是否放行 / 客户通报', '批次追溯与放行决策'],
+  ['厂长', '三线良率与目标缺口', '资源与优先级', '只看趋势与缺口，不看单点']
+];
+
+function renderAgent() {
+  document.getElementById('levels').innerHTML = LEVELS.map(l => `
+    <div class="level ${l.cls}">
+      <div class="lv">${l.lv}</div>
+      <h4>${l.title}</h4>
+      <ul>${l.items.map(i => `<li>${i}</li>`).join('')}</ul>
+      <div class="state">${l.state}</div>
+    </div>`).join('');
+  document.getElementById('roleTable').innerHTML = `
+    <table class="roles-table">
+      <thead><tr><th>角色</th><th>看哪一屏</th><th>要做的决定</th><th>典型动作</th></tr></thead>
+      <tbody>${ROLES.map(r => `<tr>${r.map((c, i) => `<td>${i === 0 ? c : c}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+}
+
+/* -------------------------------- appendix -------------------------------- */
+function renderAppendix() {
+  const A = DATA.appendix_secom;
+  const k = A.kpi;
+  const cards = [
+    { label: 'SECOM 测试期 AUC', value: num(k.test_auc, 3), sub: `95% CI ${num(k.test_auc_ci_low, 3)}–${num(k.test_auc_ci_high, 3)}`, cls: 'warn' },
+    { label: 'PR-AUC', value: num(k.test_pr_auc, 3), sub: `随机基线 ${num(k.fail_rate, 3)}`, cls: 'warn' },
+    { label: 'Recall @ 5% FPR', value: pct(k.test_recall, 1), sub: `${k.test_alerts} 条预警 / ${k.test_fails} 个失效`, cls: 'warn' },
+    { label: '回测 AUC', value: `${num(k.backtest_auc_mean, 3)}±${num(k.backtest_auc_std, 3)}`, sub: '5 折扩展窗口', cls: '' },
+    { label: '缺陷 Macro-F1', value: num(k.defect_macro_f1, 3), sub: `Accuracy ${pct(k.defect_accuracy, 1)}`, cls: 'warn' },
+    { label: '质量门禁', value: String(k.quality_status).toUpperCase(), sub: `${k.quality_checks} 项检查`, cls: k.quality_status === 'pass' ? 'good' : 'warn' }
   ];
-  document.getElementById('valueBox').innerHTML = items.map(i => `
-    <div class="item"><div class="k">${i.k}</div><div class="v">${i.v}</div></div>`).join('');
-  document.getElementById('valueNote').textContent =
-    `情景假设：单片价值 ¥${b.assumption_wafer_value_cny.toLocaleString()}，漏检流出成本 = 单片价值 × ${b.assumption_escape_multiplier}，每次误报复判成本 ¥${b.assumption_false_alarm_cost_cny}。` +
-    ` 该数字是用于面试沟通的敏感性测算，不是已实现的财务收益；真实产线需 lot_id、设备 commonality 与复判成本数据。`;
+  document.getElementById('apxKpis').innerHTML = cards.map(c => `
+    <div class="kpi ${c.cls}"><div class="label">${c.label}</div><div class="value">${c.value}</div><div class="sub">${c.sub}</div></div>`).join('');
+
+  const roc = A.metrics.curves.roc;
+  draw('apxRoc', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', ...tooltipStyle() },
+    grid: { left: 50, right: 20, top: 16, bottom: 30 },
+    xAxis: { type: 'value', name: 'FPR', min: 0, max: 1, ...axisStyle(), nameTextStyle: { color: C.muted } },
+    yAxis: { type: 'value', name: 'TPR', min: 0, max: 1, ...axisStyle(), nameTextStyle: { color: C.muted } },
+    series: [
+      { type: 'line', data: roc, symbol: 'none', smooth: true, lineStyle: { color: C.accent, width: 2.5 } },
+      { type: 'line', data: [[0, 0], [1, 1]], symbol: 'none', lineStyle: { color: C.muted, type: 'dashed', width: 1 } }
+    ]
+  });
+
+  const imp = [...A.importance].reverse();
+  draw('apxImportance', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', ...tooltipStyle(), formatter: (p) => `${imp[p[0].dataIndex].feature}<br/>gain 占比 ${pct(p[0].value, 2)}` },
+    grid: { left: 66, right: 44, top: 10, bottom: 24 },
+    xAxis: { type: 'value', ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10, formatter: v => (v * 100).toFixed(0) + '%' } },
+    yAxis: { type: 'category', data: imp.map(r => r.feature), ...axisStyle(), axisLabel: { color: C.muted, fontSize: 10.5 } },
+    series: [{ type: 'bar', data: imp.map(r => r.gain_share), barWidth: '58%', itemStyle: { color: C.accent, borderRadius: [0, 4, 4, 0] } }]
+  });
+
+  const models = Object.entries(A.metrics.models);
+  document.getElementById('apxModels').innerHTML = `
+    <table>
+      <thead><tr><th>模型</th><th>AUC</th><th>PR-AUC</th><th>Recall</th><th>Precision</th><th>FPR</th><th>预警 / 实际失效</th></tr></thead>
+      <tbody>${models.map(([name, m]) => {
+        const t = m.test;
+        return `<tr><td class="mono">${name}</td><td>${num(t.auc, 3)}</td><td>${num(t.pr_auc, 3)}</td><td>${pct(t.recall, 1)}</td><td>${pct(t.precision, 1)}</td><td>${pct(t.fpr, 1)}</td><td>${t.alerts} / ${t.actual_fail}</td></tr>`;
+      }).join('')}</tbody>
+    </table>`;
+
+  const d = A.defect;
+  const dm = d.models[d.selected_model];
+  document.getElementById('apxDefect').innerHTML = `
+    <table>
+      <thead><tr><th>指标</th><th>数值</th></tr></thead>
+      <tbody>
+        <tr><td>选中模型</td><td class="mono">${d.selected_model}</td></tr>
+        <tr><td>Accuracy</td><td class="mono">${pct(dm.accuracy, 1)}</td></tr>
+        <tr><td>Balanced Accuracy</td><td class="mono">${pct(dm.balanced_accuracy, 1)}</td></tr>
+        <tr><td>Macro-F1</td><td class="mono">${num(dm.macro_f1, 3)}</td></tr>
+        <tr><td>类别数</td><td class="mono">${(d.class_order || []).length}</td></tr>
+      </tbody>
+    </table>`;
+
+  const q = A.quality_checks;
+  const order = { fail: 0, warn: 1, pass: 2 };
+  document.getElementById('apxQualityHint').textContent = `${q.length} 项检查 · 与主演示共用同一套门禁`;
+  document.getElementById('apxQualityList').innerHTML = [...q].sort((a, b) => order[a.status] - order[b.status]).map(c => `
+    <div title="${(c.details || '').replace(/"/g, '&quot;')}">
+      <span>${c.check_name}</span>
+      <span><span class="pill ${c.status}">${c.status}</span> <span class="mono muted">${c.observed}</span></span>
+    </div>`).join('');
+}
+
+/* --------------------------------- shell --------------------------------- */
+function activate(view) {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${view}`));
+  Object.values(charts).forEach(c => c.resize());
+}
+function initTabs() {
+  document.querySelectorAll('#tabs button').forEach(btn => {
+    btn.addEventListener('click', () => activate(btn.dataset.view));
+  });
 }
 
 function boot() {
-  renderHeader();
-  renderKpis();
-  renderTrend();
-  renderRiskHist();
-  renderAlarms();
-  const select = document.getElementById('waferSelect');
-  select.innerHTML = DATA.attributions.map(a => `<option value="${a.wafer_id}">${a.wafer_id} · ${fmtPct(a.probability)}</option>`).join('');
-  select.onchange = renderAttribution;
-  renderAttribution();
-  renderDrift();
-  renderDefectDist();
-  renderMaps();
-  renderConfusion();
-  renderImportance();
-  renderRoc();
-  renderModelTable();
-  renderQuality();
-  renderBusiness();
+  renderBanner();
+  renderOverview();
+  initDrill();
+  renderDrill();
+  renderScenarios();
+  renderSpc();
+  renderAlertTable();
+  renderSuspects();
+  renderAgent();
+  renderAppendix();
+  initTabs();
+  window.addEventListener('resize', () => Object.values(charts).forEach(c => c.resize()));
+  if (location.hash) activate(location.hash.slice(1));
 }
 boot();
 </script>
